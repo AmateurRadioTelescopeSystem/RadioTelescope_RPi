@@ -1,0 +1,109 @@
+import RPi.GPIO as GPIO
+import threading
+import time
+
+_full_step = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+_half_step = [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 0, 1], [1, 0, 0, 1]]
+
+class motor(object):
+    def GPIO_Init(self):
+        #Set the pin numbering mode
+        GPIO.setmode(GPIO.BOARD)
+        
+        #Setup the output pins
+        GPIO.setup(7, GPIO.OUT)
+        GPIO.setup(11, GPIO.OUT)
+        GPIO.setup(12, GPIO.OUT)
+        GPIO.setup(13, GPIO.OUT)
+        
+        GPIO.setup(15, GPIO.OUT)
+        GPIO.setup(16, GPIO.OUT)
+        GPIO.setup(18, GPIO.OUT)
+        GPIO.setup(22, GPIO.OUT)
+        
+        #Set the pins to LOW for the initial setup
+        GPIO.output(7, 0)
+        GPIO.output(11, 0)
+        GPIO.output(12, 0)
+        GPIO.output(13, 0)
+        
+        GPIO.output(15, 0)
+        GPIO.output(16, 0)
+        GPIO.output(18, 0)
+        GPIO.output(22, 0)
+    
+    def setStep(self, c1, c2, c3, c4, RA_motor):
+        if RA_motor: #If RA_motor is True, then we are talking about the RA motor
+            GPIO.output(7, c1)
+            GPIO.output(11, c2)
+            GPIO.output(12, c3)
+            GPIO.output(13, c4)
+        else:
+            GPIO.output(15, c1)
+            GPIO.output(16, c2)
+            GPIO.output(18, c3)
+            GPIO.output(22, c4)
+    
+    def full_stepping_fwd(self, delay, steps, RA_motor):
+        j = 0 #Initialize the indexing variable
+        step = 0
+        thr = threading.currentThread()
+        while getattr(thr, "run", True) and (step < steps):
+            self.setStep(_full_step[j][0], _full_step[j][1], _full_step[j][2], _full_step[j][3], RA_motor)
+            time.sleep(delay)
+            j = j + 1
+            step = step + 1
+            j = 0 if j == 4 else j
+        thr.done = True #Indicate when we are done
+    
+    def full_stepping_bckwd(self, delay, steps, RA_motor):
+        j = 0 #Initialize the indexing variable
+        step = 0
+        thr = threading.currentThread()
+        while getattr(thr, "run", True) and (step < steps):
+            self.setStep(_full_step[3 - j][0], _full_step[3 - j][1], _full_step[3 - j][2], _full_step[3 - j][3], RA_motor)
+            time.sleep(delay)
+            j = j + 1
+            step = step + 1
+            j = 0 if j == 4 else j
+        thr.done = True #Indicate when we are done
+    
+    def half_stepping_fwd(self, delay, steps, RA_motor):
+        j = 0 #Initialize the indexing variable
+        step = 0
+        thr = threading.currentThread()
+        while getattr(thr, "run", True) and (step < steps):
+            self.setStep(_half_step[j][0], _half_step[j][1], _half_step[j][2], _half_step[j][3], RA_motor)
+            time.sleep(delay)
+            j = j + 1
+            step = step + 1
+            j = 0 if j == 8 else j
+        thr.done = True #Indicate when we are done
+    
+    def half_stepping_bckwd(self, delay, steps, RA_motor):
+        j = 0 #Initialize the indexing variable
+        step = 0
+        thr = threading.currentThread()
+        while getattr(thr, "run", True) and (step < steps):
+            self.setStep(_half_step[7 - j][0], _half_step[7 - j][1], _half_step[7 - j][2], _half_step[7 - j][3], RA_motor)
+            time.sleep(delay)
+            j = j + 1
+            step = step + 1
+            j = 0 if j == 8 else j
+        thr.done = True #Indicate when we are done
+    
+    def RA_left(self, steps):
+        
+    
+    
+    def RA_right(self, steps):
+        
+    
+    
+    def DEC_up(self, steps):
+        
+    
+    
+    def DEC_down(self, steps):
+        
+    
