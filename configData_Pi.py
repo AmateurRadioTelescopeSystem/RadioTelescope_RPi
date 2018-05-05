@@ -50,6 +50,12 @@ class confDataPi(object):
             elm = self.root.find("Steps")
             elm.set("home_calib", str(calib))
 
+    def getHost(self):
+        return self.getConfig("TCP", "host")
+
+    def setPort(self, host):
+        self.setConfig("TCP", "host", str(host))
+
     def getPort(self):
         return self.getConfig("TCP", "port")
 

@@ -1,5 +1,6 @@
 <settings>
     <TCP>
+        <host>remote</host>
         <port>10001</port>
     </TCP>
     <Steps home_calib="0">
