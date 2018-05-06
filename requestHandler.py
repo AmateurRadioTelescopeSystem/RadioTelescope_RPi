@@ -8,13 +8,14 @@ num_of_stp_per_deg_dec = 430  # Enter the number of steps per degree for the DEC
 
 
 class requestHandle(QtCore.QObject):
-    def __init__(self, cfg_data, server, client, parent=None):
+    def __init__(self, cfg_data, server, client, positionThread, parent=None):
         super(requestHandle, self).__init__(parent)  # Get the parent of the class
         self.motor = motorDriver.motor()
         self.log_data = logData_Pi.logData(__name__)
         self.cfg_data = cfg_data
         self.server = server
         self.client = client
+        self.positionThread = positionThread
 
     def start(self):
         print("Handler thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
@@ -27,9 +28,14 @@ class requestHandle(QtCore.QObject):
 
         if request == "":  # Check if the client is disconnected without any notice
             response = "None"
-        elif request == "CONNECT_CLIENT":
+        elif request == "CONNECT_CLIENT_START_SENDING_POS":
             self.client.reConnectSigC.emit()
+            self.positionThread.start()
             response = "Client notified to start"
+        elif request == "START_SENDING_POS":
+            self.positionThread.start()
+        elif request == "STOP_POS_SEND":
+            self.positionThread.quit()
         elif request == "Test":  # Respond to the connection testing command
             response = "OK"
         elif request == "Terminate":  # Send the required response for the successful termination

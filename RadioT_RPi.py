@@ -9,6 +9,7 @@ import requestHandler
 import motorDriver
 import logData_Pi
 import sys
+import DishPosition
 
 log_data = logData_Pi.logData(__name__)
 
@@ -41,8 +42,15 @@ def main():
     clientThread.finished.connect(client.close)
     clientThread.start()
 
+    posObj = DishPosition.Position(client)
+    posThread = QtCore.QThread()
+    posObj.moveToThread(posThread)
+    posThread.started.connect(posObj.start)
+    posThread.finished.connect(posObj.close)
+    #posThread.start()
+
     # Initialize and start the handler
-    request_hndl = requestHandler.requestHandle(cfg, server, client)
+    request_hndl = requestHandler.requestHandle(cfg, server, client, posThread)
     handlerThread = QtCore.QThread()
     request_hndl.moveToThread(handlerThread)
     handlerThread.started.connect(request_hndl.start)
