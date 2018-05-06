@@ -39,13 +39,14 @@ def main():
     client.moveToThread(clientThread)
     clientThread.started.connect(client.start)
     clientThread.finished.connect(client.close)
-    # clientThread.start()
+    clientThread.start()
 
     # Initialize and start the handler
     request_hndl = requestHandler.requestHandle(cfg, server, client)
     handlerThread = QtCore.QThread()
     request_hndl.moveToThread(handlerThread)
     handlerThread.started.connect(request_hndl.start)
+    handlerThread.finished.connect(request_hndl.close)
     handlerThread.start()  # Start the handler thread
 
     sys.exit(app.exec_())

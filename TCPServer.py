@@ -15,7 +15,7 @@ class TCPServer(QtCore.QObject):
 
     # This method is called in every thread start
     def start(self):
-        print("Server thread started ID: %d", int(QtCore.QThread.currentThreadId()))
+        print("Server thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
         self.socket = None  # Create the instance os the socket variable to use it later
         self.connectServ()  # Start the server
 
@@ -53,7 +53,7 @@ class TCPServer(QtCore.QObject):
             if self.socket.bytesAvailable() > 0:
                 recData = self.socket.readAll().data().decode('utf-8')  # Get the data as a string
                 self.requestProcess.emit(recData)  # Send the received data to be processed
-                print("The received data is: %s" %recData)
+                print("The received data is (Server here): %s" % recData)
         except Exception:
             # If data is sent fast, then an exception will occur
             self.log_data.log("EXCEPT", "A connected client abruptly disconnected. Returning to connection waiting")
@@ -61,6 +61,7 @@ class TCPServer(QtCore.QObject):
     # If at any moment the connection state is changed, we call this method
     def _disconnected(self):
         # Do the following if the connection is lost
+        self.socket.close()
         self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening again
 
     # This method is called whenever the signal to send data back is fired
@@ -70,7 +71,7 @@ class TCPServer(QtCore.QObject):
             if self.socket.state() == QtNetwork.QAbstractSocket.ConnectedState:
                 self.socket.write(data.encode('utf-8'))  # Send data back to client
                 self.socket.waitForBytesWritten()  # Wait for the data to be written
-                print("Those were sent: %s", data)
+                print("Those were sent: %s" % data)
         except Exception:
             self.log_data.log("EXCEPT", "Problem sending data. See traceback.")
 

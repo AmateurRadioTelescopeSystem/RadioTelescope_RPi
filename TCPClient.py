@@ -13,30 +13,34 @@ class TCPClient(QtCore.QObject):
         self.cfgData = cfgData  # Create a variable for the cfg file
 
     def start(self):
-        print("Client thread started ID: %d", int(QtCore.QThread.currentThreadId()))
+        print("Client thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
         self.log = logData_Pi.logData(__name__)  # Create the logger
+        self.sock = QtNetwork.QTcpSocket()  # Create the TCP socket
         self.reConnectSigC.connect(self.connect)  # Do the reconnect signal connection
         self.connect()  # Start a connection
 
     # The connect function is called if the signal is fired or in the start of the thread
     @QtCore.pyqtSlot(name='reConnectClient')
     def connect(self):
-        # Get the host and port from the settings file for the client connection
-        host = self.cfgData.getClientHost()
-        port = self.cfgData.getClientPort()
+        print("Client thread from connect ID: %d" % int(QtCore.QThread.currentThreadId()))
 
-        self.sock = QtNetwork.QTcpSocket()  # Create the TCP socket
-        self.sock.readyRead.connect(self._receive)  # Data que signal
-        self.sock.connected.connect(self._hostConnected)  # What to do when we have connected
-        self.sock.error.connect(self._error)  # Log any error occurred and also perform the necessary actions
-        self.sock.disconnected.connect(self._disconnected)  # If there is state change then call the function
+        if self.sock.state() != QtNetwork.QAbstractSocket.ConnectedState:
+            # Get the host and port from the settings file for the client connection
+            host = self.cfgData.getClientHost()
+            port = self.cfgData.getClientPort()
 
-        self.sock.connectToHost(QtNetwork.QHostAddress(host), int(port))  # Attempt to connect to the server
+            self.sock = QtNetwork.QTcpSocket()  # Create the TCP socket
+            self.sock.readyRead.connect(self._receive)  # Data que signal
+            self.sock.connected.connect(self._hostConnected)  # What to do when we have connected
+            self.sock.error.connect(self._error)  # Log any error occurred and also perform the necessary actions
+            self.sock.disconnected.connect(self._disconnected)  # If there is state change then call the function
 
-        self.sock.waitForConnected(msecs=1000)  # Wait a until connected (the function is waiting for 1 sec)
+            self.sock.connectToHost(QtNetwork.QHostAddress(host), int(port))  # Attempt to connect to the server
+
+            self.sock.waitForConnected(msecs=1000)  # Wait a until connected (the function is waiting for 1 sec)
 
     @QtCore.pyqtSlot(str, name='sendDataClient')
-    def send(self, data: str):
+    def sendD(self, data: str):
         if self.sock.state() == QtNetwork.QAbstractSocket.ConnectedState:
             self.sock.write(data.encode('utf-8'))
             self.sock.waitForBytesWritten()
@@ -52,7 +56,7 @@ class TCPClient(QtCore.QObject):
         self.sock.waitForConnected(msecs=1000)
 
     def _hostConnected(self):
-        self.sendData.connect(self.send)  # Send the data to the server when this signal is fired
+        self.sendData.connect(self.sendD)  # Send the data to the server when this signal is fired
 
     def _error(self):
         # Print and log any error occurred
@@ -63,7 +67,7 @@ class TCPClient(QtCore.QObject):
     def close(self):
         self.sock.disconnected.disconnect()  # Disconnect this signal first to avoid getting in the function
         if self.sock.state() == QtNetwork.QAbstractSocket.ConnectedState:
-            self.sendData.disconnect(self.send)  # Disconnect the data send signal, since the thread is closing
+            self.sendData.disconnect(self.sendD)  # Disconnect the data send signal, since the thread is closing
             self.sock.disconnectFromHost()  # Disconnect from the host
             self.sock.waitForDisconnected(msecs=1000)  # And wait until disconnected or timeout (default 3 seconds)
         else:

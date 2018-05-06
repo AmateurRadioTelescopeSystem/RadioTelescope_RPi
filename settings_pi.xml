@@ -4,8 +4,8 @@
         <port>10001</port>
     </TCPServer>
     <TCPClient>
-        <host>192.168.1.13</host>
-        <port>10002</port>
+        <host>192.168.1.4</host>
+        <port>10003</port>
     </TCPClient>
     <Steps home_calib="0">
         <RA>0.0</RA>
