@@ -1,8 +1,12 @@
 <settings>
-    <TCP>
+    <TCPServer>
         <host>remote</host>
         <port>10001</port>
-    </TCP>
+    </TCPServer>
+    <TCPClient>
+        <host>192.168.1.13</host>
+        <port>10002</port>
+    </TCPClient>
     <Steps home_calib="0">
         <RA>0.0</RA>
         <DEC>0.0</DEC>

@@ -5,6 +5,7 @@ import logData_Pi
 class TCPServer(QtCore.QObject):
     # Create the signals to be used for data handling
     sendDataClient = QtCore.pyqtSignal(str, name='clientDataSend')  # Send the data to client
+    requestProcess = QtCore.pyqtSignal(str, name='requestProcess')  # Send the received data for further processing
 
     def __init__(self, cfg, parent=None):
         super(TCPServer, self).__init__(parent)  # Get the parent of the class
@@ -14,6 +15,7 @@ class TCPServer(QtCore.QObject):
 
     # This method is called in every thread start
     def start(self):
+        print("Server thread started ID: %d", int(QtCore.QThread.currentThreadId()))
         self.socket = None  # Create the instance os the socket variable to use it later
         self.connectServ()  # Start the server
 
@@ -29,13 +31,13 @@ class TCPServer(QtCore.QObject):
             self.host = ipAddress  # Save the local IP address
 
         self.tcpServer = QtNetwork.QTcpServer()  # Create a server object
-        self.tcpServer.newConnection.connect(self.new_connection)  # Handler for a new connection
+        self.tcpServer.newConnection.connect(self._new_connection)  # Handler for a new connection
         self.sendDataClient.connect(self.send)  # Connect the signal trigger for data sending
 
         self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening for connections
 
     # Whenever there is new connection, we call this method
-    def new_connection(self):
+    def _new_connection(self):
         if self.tcpServer.hasPendingConnections():
             self.socket = self.tcpServer.nextPendingConnection()  # Returns a new QTcpSocket
 
@@ -50,6 +52,7 @@ class TCPServer(QtCore.QObject):
         try:
             if self.socket.bytesAvailable() > 0:
                 recData = self.socket.readAll().data().decode('utf-8')  # Get the data as a string
+                self.requestProcess.emit(recData)  # Send the received data to be processed
                 print("The received data is: %s" %recData)
         except Exception:
             # If data is sent fast, then an exception will occur
