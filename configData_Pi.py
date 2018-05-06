@@ -6,7 +6,7 @@ import os
 class confDataPi(object):
     # Class constructor
     def __init__(self, filename):
-        self.logdt = logData_Pi.logData(__name__)
+        self.log_data = logData_Pi.logData(__name__)
         self.filename = filename  # Create a variable with the given filename
         self.parse()  # Parse the XML file
 
@@ -50,14 +50,28 @@ class confDataPi(object):
             elm = self.root.find("Steps")
             elm.set("home_calib", str(calib))
 
+    # Server data
     def getHost(self):
-        return self.getConfig("TCP", "host")
+        return self.getConfig("TCPServer", "host")
 
     def setPort(self, host):
-        self.setConfig("TCP", "host", str(host))
+        self.setConfig("TCPServer", "host", str(host))
 
     def getPort(self):
-        return self.getConfig("TCP", "port")
+        return self.getConfig("TCPServer", "port")
 
     def setPort(self, port):
-        self.setConfig("TCP", "port", str(port))
+        self.setConfig("TCPServer", "port", str(port))
+
+    # Client data
+    def getClientHost(self):
+        return self.getConfig("TCPClient", "host")
+
+    def setClientPort(self, host):
+        self.setConfig("TCPClient", "host", str(host))
+
+    def getClientPort(self):
+        return self.getConfig("TCPClient", "port")
+
+    def setClientPort(self, port):
+        self.setConfig("TCPClient", "port", str(port))

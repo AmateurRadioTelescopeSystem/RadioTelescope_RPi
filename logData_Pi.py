@@ -3,6 +3,8 @@ import logging
 
 class logData(object):
     def __init__(self, lgger_name):
+        # TODO make the format better
+        # TODO give the ability to split logs, so no huge files are created
         fileHandler = logging.FileHandler('RPi_Status.log')  # Create the necessary file
         strmHandler = logging.StreamHandler()  # Limited use, removed in the end product
         # Set the formatting for the logs

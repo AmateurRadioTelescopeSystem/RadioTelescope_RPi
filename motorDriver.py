@@ -11,6 +11,8 @@ _RA2_PIN = 8
 _DEC1_PIN = 10
 _DEC2_PIN = 12
 
+# TODO make the class a a QObject, so we can use QThreads to take advantage of signals and slots
+
 
 class motor(object):
     def GPIO_Init(self):
