@@ -19,12 +19,19 @@ log_data = logData_Pi.logData(__name__)
 
 def main():
     cfg = configData_Pi.confDataPi("settings_pi.xml")
-    motor = motorDriver.motor()
+    motor = motorDriver.MotorInit()
+    motorMove = motorDriver.SteppingFwd()
 
     motor.GPIO_Init()  # Initialize the GPIO pins on the Raspberry
 
     app = QtCore.QCoreApplication(sys.argv)
     print("Program started, Main thread ID: %d" % QtCore.QThread.currentThreadId())
+
+    # Initialize the motor threads
+    motorThread = QtCore.QThread()
+    motorMove.moveToThread(motorThread)
+    motorThread.started.connect(motorMove.start)
+    motorThread.start()
 
     # Initialize the server
     server = TCPServer.TCPServer(cfg)

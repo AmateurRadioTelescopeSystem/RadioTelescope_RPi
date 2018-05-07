@@ -14,10 +14,11 @@ _DEC2_PIN = 12
 # TODO make the class a a QObject, so we can use QThreads to take advantage of signals and slots
 
 
-class motor(QtCore.QObject):
+class MotorInit(QtCore.QObject):
     def __init__(self, parent=None):
-        super(motor, self).__init__(parent)
-        self.GPIO_Init()  # Initialize the GPIO pins
+        super(MotorInit, self).__init__(parent)
+        print("MotorInit constructor thread ID: %d" % QtCore.QThread.currentThreadId())
+        # self.GPIO_Init()  # Initialize the GPIO pins
 
     # TODO see how the initialization and setting will be implemented for the GPIO
     def GPIO_Init(self):
@@ -53,15 +54,33 @@ class motor(QtCore.QObject):
 class SteppingFwd(QtCore.QObject):
     def __init__(self, parent=None):
         super(SteppingFwd, self).__init__(parent)
+        print("SteppingFwd constructor thread ID: %d" % QtCore.QThread.currentThreadId())
+        self.motor = MotorInit()
+
+    def start(self):
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.move_ra)
+        self.moveRaCount = 0
+        self.timer.start()
 
     def move_ra(self):
+        j = 0
+        print("MoveRA thread ID: %d" % QtCore.QThread.currentThreadId())
         if (not GPIO.input(_RA1_PIN)) and (not GPIO.input(_RA2_PIN)):  # If both pins are on
             j = 2  # Set the variable to the next state
-        elif not GPIO.input(_RA1_PIN):  # If just one pin is on
+            print("We are at first statement")
+        elif (not GPIO.input(_RA1_PIN)) and GPIO.input(_RA2_PIN):  # If just one pin is on
             j = 1
-        else:
+            print("We are at second statement")
+        elif GPIO.input(_RA1_PIN) and (not GPIO.input(_RA2_PIN)):
             j = 0
-        self.setStep(_steps_half[j][0], _steps_half[j][1], True)
+            print("We are at third statement")
+        print(j)
+        self.motor.setStep(_steps_half[j][0], _steps_half[j][1], True)
+        j = j + 1
+        j = 0 if j == 3 else j
+        self.moveRaCount = j
 
     def move_dec(self):
         if (not GPIO.input(_DEC1_PIN)) and (not GPIO.input(_DEC2_PIN)):  # If both pins are on
@@ -70,12 +89,13 @@ class SteppingFwd(QtCore.QObject):
             j = 1
         else:
             j = 0
-        self.setStep(_steps_half[j][0], _steps_half[j][1], False)
+        self.motor.setStep(_steps_half[j][0], _steps_half[j][1], False)
 
 
 class SteppingBckwd(QtCore.QObject):
     def __init__(self, parent=None):
         super(SteppingBckwd, self).__init__(parent)
+        self.motor = MotorInit()
 
     def move_ra(self):
         if (not GPIO.input(_RA1_PIN)) and (not GPIO.input(_RA2_PIN)):  # If both pins are on
@@ -84,7 +104,7 @@ class SteppingBckwd(QtCore.QObject):
             j = 2
         else:
             j = 1
-        self.setStep(_steps_half[j][0], _steps_half[j][1], True)
+        self.motor.setStep(_steps_half[j][0], _steps_half[j][1], True)
 
     def move_dec(self):
         if (not GPIO.input(_DEC1_PIN)) and (not GPIO.input(_DEC2_PIN)):  # If both pins are on
@@ -93,4 +113,4 @@ class SteppingBckwd(QtCore.QObject):
             j = 2
         else:
             j = 1
-        self.setStep(_steps_half[j][0], _steps_half[j][1], False)
+        self.motor.setStep(_steps_half[j][0], _steps_half[j][1], False)
