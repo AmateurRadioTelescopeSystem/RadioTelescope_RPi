@@ -50,8 +50,8 @@ class TCPServer(QtCore.QObject):
     # Should we have data pending to be received, this method is called
     def _receive(self):
         try:
-            if self.socket.bytesAvailable() > 0:
-                recData = self.socket.readAll().data().decode('utf-8')  # Get the data as a string
+            while self.socket.bytesAvailable() > 0:  # Read all data in que
+                recData = self.socket.readLine().data().decode('utf-8').rstrip('\n')  # Get the data as a string
                 self.requestProcess.emit(recData)  # Send the received data to be processed
                 print("The received data is (Server here): %s" % recData)
         except Exception:
@@ -61,6 +61,7 @@ class TCPServer(QtCore.QObject):
     # If at any moment the connection state is changed, we call this method
     def _disconnected(self):
         # Do the following if the connection is lost
+        print("Someone got out!!!")
         self.socket.close()
         self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening again
 
@@ -75,13 +76,12 @@ class TCPServer(QtCore.QObject):
         except Exception:
             self.log_data.log("EXCEPT", "Problem sending data. See traceback.")
 
-    def releaseClient(self):
-        self.socket.close()
-
-    # This method is called whenever the thread exits
+    ''''# This method is called whenever the thread exits
     def close(self):
+        print("TCP server thread is closing")
         if self.socket is not None:
+            print("Closing server")
             self.socket.disconnected.disconnect()  # Close the disconnect signal first to avoid firing
             self.socket.close()  # Close the underlying TCP socket
         self.tcpServer.close()  # Close the TCP server
-        self.sendDataClient.disconnect()  # Detach the signal to avoid any accidental firing (Reconnected at start)
+        self.sendDataClient.disconnect()  # Detach the signal to avoid any accidental firing (Reconnected at start)'''

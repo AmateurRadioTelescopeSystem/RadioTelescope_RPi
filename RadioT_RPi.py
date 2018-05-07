@@ -31,33 +31,30 @@ def main():
     serverThread = QtCore.QThread()
     server.moveToThread(serverThread)
     serverThread.started.connect(server.start)
-    serverThread.finished.connect(server.close)
-    serverThread.start()
+    #serverThread.finished.connect(server.close)
 
     # Initialize the client
     client = TCPClient.TCPClient(cfg)
     clientThread = QtCore.QThread()
     client.moveToThread(clientThread)
     clientThread.started.connect(client.start)
-    clientThread.finished.connect(client.close)
-    clientThread.start()
+    #clientThread.finished.connect(client.close)
 
     posObj = DishPosition.Position(client)
     posThread = QtCore.QThread()
     posObj.moveToThread(posThread)
     posThread.started.connect(posObj.start)
-    posThread.finished.connect(posObj.close)
-    #posThread.start()
+    #posThread.finished.connect(posObj.close)
 
     # Initialize and start the handler
-    request_hndl = requestHandler.requestHandle(cfg, server, client, posThread)
+    request_hndl = requestHandler.requestHandle(cfg, server, client, serverThread, clientThread, posThread)
     handlerThread = QtCore.QThread()
     request_hndl.moveToThread(handlerThread)
     handlerThread.started.connect(request_hndl.start)
-    handlerThread.finished.connect(request_hndl.close)
+    #handlerThread.finished.connect(request_hndl.close)
     handlerThread.start()  # Start the handler thread
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec_())  # Start the event loop
 
 
 if __name__ == '__main__':

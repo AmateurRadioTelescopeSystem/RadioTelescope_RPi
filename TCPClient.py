@@ -63,8 +63,9 @@ class TCPClient(QtCore.QObject):
         print("An error occurred in client: %s" % self.sock.errorString())
         self.log.log("WARNING", "Some error occurred in client: %s" % self.sock.errorString())
 
-    # This method is called when the thread exits
+    ''''# This method is called when the thread exits
     def close(self):
+        print("TCP client thread is closing")
         self.sock.disconnected.disconnect()  # Disconnect this signal first to avoid getting in the function
         if self.sock.state() == QtNetwork.QAbstractSocket.ConnectedState:
             self.sendData.disconnect(self.sendD)  # Disconnect the data send signal, since the thread is closing
@@ -72,4 +73,4 @@ class TCPClient(QtCore.QObject):
             self.sock.waitForDisconnected(msecs=1000)  # And wait until disconnected or timeout (default 3 seconds)
         else:
             self.sock.close()  # Close the socket before exiting
-        self.reConnectSigC.disconnect()  # Thread is closing so it will not be needed any more
+        self.reConnectSigC.disconnect()  # Thread is closing so it will not be needed any more'''
