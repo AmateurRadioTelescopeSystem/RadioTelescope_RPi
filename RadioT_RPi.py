@@ -47,7 +47,7 @@ def main():
     #posThread.finished.connect(posObj.close)
 
     # Initialize and start the handler
-    request_hndl = requestHandler.requestHandle(cfg, server, client, serverThread, clientThread, posThread)
+    request_hndl = requestHandler.requestHandle(cfg, server, client, posObj, serverThread, clientThread, posThread)
     handlerThread = QtCore.QThread()
     request_hndl.moveToThread(handlerThread)
     handlerThread.started.connect(request_hndl.start)
