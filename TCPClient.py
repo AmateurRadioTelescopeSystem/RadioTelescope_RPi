@@ -47,9 +47,10 @@ class TCPClient(QtCore.QObject):
             print("Data sent from client: %s" % data)
 
     def _receive(self):
-        if self.sock.bytesAvailable() > 0:
-            string = self.sock.readAll().data()  # Get the data from the received QByteArray object
-            self.dataRcvSigC.emit(string.decode('utf-8'))  # Decode the data to a string
+        while self.sock.bytesAvailable() > 0:  # Read all data in que
+            string = self.sock.readLine().data().decode('utf-8').rstrip('\n')  # Get the data as a string
+            self.sock.readLine()
+            self.dataRcvSigC.emit(string)  # Decode the data to a string
 
     def _disconnected(self):
         self.sendData.disconnect()
