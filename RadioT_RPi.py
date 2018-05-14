@@ -21,6 +21,7 @@ def main():
     cfg = configData_Pi.confDataPi("settings_pi.xml")
     motor = motorDriver.MotorInit()
     motorMove = motorDriver.SteppingFwd()
+    # motorMove = motorDriver.SteppingBckwd()
 
     motor.GPIO_Init()  # Initialize the GPIO pins on the Raspberry
 

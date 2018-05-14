@@ -3,15 +3,13 @@ import RPi.GPIO as GPIO
 import threading
 import time
 
-_steps_half = [[1, 0], [1, 1], [0, 1]]
+_steps_half = [[1, 0], [1, 1], [0, 1], [0, 0]]
 
 # Set the pin numbers where the output is going to be
 _RA1_PIN = 7
 _RA2_PIN = 8
 _DEC1_PIN = 10
 _DEC2_PIN = 12
-
-# TODO make the class a a QObject, so we can use QThreads to take advantage of signals and slots
 
 
 class MotorInit(QtCore.QObject):
@@ -67,28 +65,28 @@ class SteppingFwd(QtCore.QObject):
     def move_ra(self):
         j = 0
         print("MoveRA thread ID: %d" % QtCore.QThread.currentThreadId())
-        if (not GPIO.input(_RA1_PIN)) and (not GPIO.input(_RA2_PIN)):  # If both pins are on
-            j = 2  # Set the variable to the next state
-            print("We are at first statement")
-        elif (not GPIO.input(_RA1_PIN)) and GPIO.input(_RA2_PIN):  # If just one pin is on
-            j = 1
-            print("We are at second statement")
+        print("Pin stat: %d %d" % (GPIO.input(_RA1_PIN), GPIO.input(_RA2_PIN)))
+        if (not GPIO.input(_RA1_PIN)) and (not GPIO.input(_RA2_PIN)):  # If both pins are off
+            j = 0  # Set the variable to the next state
+        elif GPIO.input(_RA1_PIN) and GPIO.input(_RA2_PIN):  # If just one pin is on
+            j = 2
         elif GPIO.input(_RA1_PIN) and (not GPIO.input(_RA2_PIN)):
-            j = 0
-            print("We are at third statement")
-        print(j)
+            j = 1
+        elif not GPIO.input(_RA1_PIN) and GPIO.input(_RA2_PIN):
+            j = 3
         self.motor.setStep(_steps_half[j][0], _steps_half[j][1], True)
-        j = j + 1
-        j = 0 if j == 3 else j
         self.moveRaCount = j
 
     def move_dec(self):
-        if (not GPIO.input(_DEC1_PIN)) and (not GPIO.input(_DEC2_PIN)):  # If both pins are on
-            j = 2  # Set the variable to the next state
-        elif not GPIO.input(_DEC1_PIN):  # If just one pin is on
+        j = 0
+        if (not GPIO.input(_DEC1_PIN)) and (not GPIO.input(_DEC2_PIN)):  # If both pins are off
+            j = 0  # Set the variable to the next state
+        elif GPIO.input(_DEC1_PIN) and GPIO.input(_DEC2_PIN):  # If just one pin is on
+            j = 2
+        elif GPIO.input(_DEC1_PIN) and (not GPIO.input(_DEC2_PIN)):
             j = 1
-        else:
-            j = 0
+        elif not GPIO.input(_DEC1_PIN) and GPIO.input(_DEC2_PIN):
+            j = 3
         self.motor.setStep(_steps_half[j][0], _steps_half[j][1], False)
 
 
@@ -97,20 +95,33 @@ class SteppingBckwd(QtCore.QObject):
         super(SteppingBckwd, self).__init__(parent)
         self.motor = MotorInit()
 
+    def start(self):
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.move_ra)
+        self.moveRaCount = 0
+        self.timer.start()
+
     def move_ra(self):
-        if (not GPIO.input(_RA1_PIN)) and (not GPIO.input(_RA2_PIN)):  # If both pins are on
-            j = 0 # Set the variable to the next state
-        elif not GPIO.input(_RA1_PIN):  # If just one pin is on
-            j = 2
-        else:
+        print("Pin stat: %d %d" % (GPIO.input(_RA1_PIN), GPIO.input(_RA2_PIN)))
+        if (not GPIO.input(_RA1_PIN)) and (not GPIO.input(_RA2_PIN)):  # If both pins are off
+            j = 2  # Set the variable to the next state
+        elif GPIO.input(_RA1_PIN) and GPIO.input(_RA2_PIN):  # If just one pin is on
+            j = 0
+        elif GPIO.input(_RA1_PIN) and (not GPIO.input(_RA2_PIN)):
+            j = 3
+        elif not GPIO.input(_RA1_PIN) and GPIO.input(_RA2_PIN):
             j = 1
         self.motor.setStep(_steps_half[j][0], _steps_half[j][1], True)
 
     def move_dec(self):
-        if (not GPIO.input(_DEC1_PIN)) and (not GPIO.input(_DEC2_PIN)):  # If both pins are on
-            j = 0  # Set the variable to the next state
-        elif not GPIO.input(_DEC1_PIN):  # If just one pin is on
-            j = 2
-        else:
+        j = 0
+        if (not GPIO.input(_DEC1_PIN)) and (not GPIO.input(_DEC2_PIN)):  # If both pins are off
+            j = 2  # Set the variable to the next state
+        elif GPIO.input(_DEC1_PIN) and GPIO.input(_DEC2_PIN):  # If just one pin is on
+            j = 0
+        elif GPIO.input(_DEC1_PIN) and (not GPIO.input(_DEC2_PIN)):
+            j = 3
+        elif not GPIO.input(_DEC1_PIN) and GPIO.input(_DEC2_PIN):
             j = 1
         self.motor.setStep(_steps_half[j][0], _steps_half[j][1], False)
