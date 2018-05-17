@@ -61,7 +61,6 @@ class TCPServer(QtCore.QObject):
     # If at any moment the connection state is changed, we call this method
     def _disconnected(self):
         # Do the following if the connection is lost
-        print("Someone got out!!!")
         self.socket.close()
         self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening again
 
@@ -72,7 +71,7 @@ class TCPServer(QtCore.QObject):
             if self.socket.state() == QtNetwork.QAbstractSocket.ConnectedState:
                 self.socket.write(data.encode('utf-8'))  # Send data back to client
                 self.socket.waitForBytesWritten()  # Wait for the data to be written
-                print("Those were sent: %s" % data)
+                # print("Those were sent: %s" % data)
         except Exception:
             self.log_data.log("EXCEPT", "Problem sending data. See traceback.")
 

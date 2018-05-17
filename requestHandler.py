@@ -1,4 +1,5 @@
 from PyQt5 import QtCore
+from functools import partial
 import logData_Pi
 import motorDriver
 import sys
@@ -28,6 +29,7 @@ class requestHandle(QtCore.QObject):
 
         self.motor = motorDriver.MotorInit()
         self.motorMove = motorDriver.Stepping()
+        self.motorMove.motStepSig.connect(self.sendSteps)
 
         self.motor.GPIO_Init()  # Initialize the GPIO pins on the Raspberry
 
@@ -90,3 +92,7 @@ class requestHandle(QtCore.QObject):
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 
+    @QtCore.pyqtSlot(str, int, name='motorStepCount')
+    def sendSteps(self, typ: str, stp: int):
+        string = typ + "_" + str(stp) + "\n"
+        self.server.sendDataClient.emit(string)

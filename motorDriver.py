@@ -133,6 +133,9 @@ class Stepping(QtCore.QObject):
             self.tempRaCount = 0  # Reset the temporary step count
             self.raMoving = False  # Indicate that the motor has now stopped
 
+        if self.tempRaCount%10 == 0 or self.tempRaCount >= self.ra_step:
+            self.motStepSig.emit("RASTEPS", self.moveRaCount)
+
     def move_dec_fwd(self):
         j = 0
         if (not GPIO.input(_DEC1_PIN)) and (not GPIO.input(_DEC2_PIN)):  # If both pins are off
@@ -152,6 +155,9 @@ class Stepping(QtCore.QObject):
             self.timer_dec.timeout.disconnect()
             self.tempDecCount = 0
             self.decMoving = False
+
+        if self.tempDecCount%10 == 0 or self.tempDecCount >= self.dec_step:
+            self.motStepSig.emit("DECSTEPS", self.moveDecCount)
 
     def move_ra_back(self):
         j = 0
@@ -173,6 +179,9 @@ class Stepping(QtCore.QObject):
             self.tempRaCount = 0
             self.raMoving = False
 
+        if self.tempRaCount%10 == 0 or self.tempRaCount >= abs(self.ra_step):
+            self.motStepSig.emit("RASTEPS", self.moveRaCount)
+
     def move_dec_back(self):
         j = 0
         if (not GPIO.input(_DEC1_PIN)) and (not GPIO.input(_DEC2_PIN)):  # If both pins are off
@@ -192,3 +201,6 @@ class Stepping(QtCore.QObject):
             self.timer_dec.timeout.disconnect()
             self.tempDecCount = 0
             self.decMoving = False
+
+        if self.tempDecCount%10 == 0 or self.tempDecCount >= abs(self.dec_step):
+            self.motStepSig.emit("DECSTEPS", self.moveDecCount)
