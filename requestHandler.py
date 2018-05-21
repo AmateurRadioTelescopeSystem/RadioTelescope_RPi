@@ -12,14 +12,16 @@ num_of_stp_per_deg_dec = 430  # Enter the number of steps per degree for the DEC
 class requestHandle(QtCore.QObject):
     def __init__(self, cfg_data, server, client, posObj, servThread, clientThread, positionThread, parent=None):
         super(requestHandle, self).__init__(parent)  # Get the parent of the class
-        self.log_data = logData_Pi.logData(__name__)
+        self.log_data = logData_Pi.logData(__name__)  # Get the logging object
         self.cfg_data = cfg_data
+
         self.server = server
         self.client = client
+        self.posObj = posObj
+
         self.positionThread = positionThread
         self.serverThread = servThread
         self.clientThread = clientThread
-        self.posObj = posObj
 
     def start(self):
         print("Handler thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
@@ -42,7 +44,7 @@ class requestHandle(QtCore.QObject):
     def process(self, request: str):
         print("Process handler called, handle msg: %s" % request)
         response = "Unrecognizable request"  # Variable to hold the response to be sent
-        splt_req = request.split("_")
+        splt_req = request.split("_")  # Split the string using the provided delimiter
 
         if request == "CONNECT_CLIENT":
             self.client.reConnectSigC.emit()  # Attempt a client reconnection since the server should be running
@@ -79,7 +81,6 @@ class requestHandle(QtCore.QObject):
         elif request == "Terminate":  # Send the required response for the successful termination
             self.log_data.log("INFO", "Client requested connection termination.")
             self.server.releaseClient()
-            response = "Bye"
         elif request == "Quit":  # Send the 'Quit' response, which indicates server closing
             response = "Server closing"
         elif request == "Report Position":  # Respond with the current position
@@ -89,6 +90,7 @@ class requestHandle(QtCore.QObject):
             response = "NO"  # Value until full functionality is provided
         elif request == "SCALE":  # Send the number of steps per degree for each motor
             response = "SCALEVALS_RA_%d_DEC_%d" % (num_of_stp_per_deg_ra, num_of_stp_per_deg_dec)
+        # elif request == "TRNST":
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 

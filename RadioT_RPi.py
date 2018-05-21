@@ -2,8 +2,7 @@
 
 # Import the required libraries and classes
 from PyQt5 import QtCore
-import TCPServer
-import TCPClient
+from Networking import TCPClient, TCPServer
 import configData_Pi
 import requestHandler
 import logData_Pi
