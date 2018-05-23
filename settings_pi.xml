@@ -8,7 +8,7 @@
         <port>10003</port>
     </TCPClient>
     <Steps home_calib="0">
-        <RA>0.0</RA>
-        <DEC>0.0</DEC>
+        <RA>0</RA>
+        <DEC>0</DEC>
     </Steps>
 </settings>

@@ -43,9 +43,16 @@ class confDataPi(object):
         elm = self.root.find("Steps")
         return [float(self.getConfig("Steps", "RA")), float(self.getConfig("Steps", "DEC")), elm.get("home_calib")]
 
+    # Make it as direct as possible to save time
     def setSteps(self, m_steps, calib=""):
-        self.setConfig("Steps", "RA", float(m_steps[0]))
-        self.setConfig("Steps", "DEC", float(m_steps[1]))
+        if m_steps[0] == "RA":
+            self.setConfig("Steps", "RA", m_steps[1])
+        elif m_steps[0] == "DEC":
+            self.setConfig("Steps", "DEC", m_steps[2])
+        elif m_steps[0] == "BOTH":
+            self.setConfig("Steps", "RA", m_steps[1])
+            self.setConfig("Steps", "DEC", m_steps[2])
+
         if calib != "":
             elm = self.root.find("Steps")
             elm.set("home_calib", str(calib))
