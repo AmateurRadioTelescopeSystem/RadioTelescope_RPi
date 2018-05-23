@@ -127,7 +127,6 @@ class Stepping(QtCore.QObject):
         self.motor.setStep(_steps_half[j][0], _steps_half[j][1], True)
         self.moveRaCount = self.moveRaCount + 1  # Hold the total step count
         self.tempRaCount = self.tempRaCount + 1  # Temporary step count to know when to stop
-        # self.cfg.setSteps(["RA", self.moveRaCount, "0"])
 
         if self.tempRaCount >= self.ra_step:
             self.timer_ra.stop()  # Stop the timer
@@ -137,6 +136,7 @@ class Stepping(QtCore.QObject):
 
         if self.tempRaCount%10 == 0 or self.tempRaCount >= self.ra_step:
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
+            self.updtStepSig.emit(["RA", self.moveRaCount, "0"])
 
     def move_dec_fwd(self):
         j = 0
@@ -151,7 +151,6 @@ class Stepping(QtCore.QObject):
         self.motor.setStep(_steps_half[j][0], _steps_half[j][1], False)
         self.moveDecCount = self.moveDecCount + 1
         self.tempDecCount = self.tempDecCount + 1
-        # self.cfg.setSteps(["DEC", "0", self.moveDecCount])
 
         if self.tempDecCount >= self.dec_step:
             self.timer_dec.stop()
@@ -161,6 +160,7 @@ class Stepping(QtCore.QObject):
 
         if self.tempDecCount%10 == 0 or self.tempDecCount >= self.dec_step:
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)
+            self.updtStepSig.emit(["DEC", "0", self.moveDecCount])
 
     def move_ra_back(self):
         j = 0
@@ -175,7 +175,6 @@ class Stepping(QtCore.QObject):
         self.motor.setStep(_steps_half[j][0], _steps_half[j][1], True)
         self.moveRaCount = self.moveRaCount - 1
         self.tempRaCount = self.tempRaCount + 1
-        # self.cfg.setSteps(["RA", self.moveRaCount, "0"])
 
         if self.tempRaCount >= abs(self.ra_step):
             self.timer_ra.stop()
@@ -185,6 +184,7 @@ class Stepping(QtCore.QObject):
 
         if self.tempRaCount%10 == 0 or self.tempRaCount >= abs(self.ra_step):
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
+            self.updtStepSig.emit(["RA", self.moveRaCount, "0"])
 
     def move_dec_back(self):
         j = 0
@@ -199,7 +199,6 @@ class Stepping(QtCore.QObject):
         self.motor.setStep(_steps_half[j][0], _steps_half[j][1], False)
         self.moveDecCount = self.moveDecCount - 1
         self.tempDecCount = self.tempDecCount + 1
-        self.updtStepSig.emit(["DEC", "0", self.moveDecCount])
 
         if self.tempDecCount >= abs(self.dec_step):
             self.timer_dec.stop()
@@ -209,3 +208,4 @@ class Stepping(QtCore.QObject):
 
         if self.tempDecCount%10 == 0 or self.tempDecCount >= abs(self.dec_step):
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)
+            self.updtStepSig.emit(["DEC", "0", self.moveDecCount])

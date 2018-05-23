@@ -45,23 +45,25 @@ class confDataPi(object):
 
     # Make it as direct as possible to save time
     def setSteps(self, m_steps, calib=""):
+        elm = self.root.find("Steps")  # Get the required element from the tree
         if m_steps[0] == "RA":
-            self.setConfig("Steps", "RA", m_steps[1])
+            elm[0].text = str(m_steps[1])  # Set the RA element on XML
         elif m_steps[0] == "DEC":
-            self.setConfig("Steps", "DEC", m_steps[2])
+            elm[1].text = str(m_steps[2])  # Set the DEC element on XML
         elif m_steps[0] == "BOTH":
-            self.setConfig("Steps", "RA", m_steps[1])
-            self.setConfig("Steps", "DEC", m_steps[2])
+            elm[0].text = str(m_steps[1])  # Set the RA element on XML
+            elm[1].text = str(m_steps[2])  # Set the DEC element on XML
 
         if calib != "":
             elm = self.root.find("Steps")
             elm.set("home_calib", str(calib))
+        self.tree.write(self.filename)  # Write the data to the XML file
 
     # Server data
     def getHost(self):
         return self.getConfig("TCPServer", "host")
 
-    def setPort(self, host):
+    def setHost(self, host):
         self.setConfig("TCPServer", "host", str(host))
 
     def getPort(self):
@@ -74,7 +76,7 @@ class confDataPi(object):
     def getClientHost(self):
         return self.getConfig("TCPClient", "host")
 
-    def setClientPort(self, host):
+    def setClientHost(self, host):
         self.setConfig("TCPClient", "host", str(host))
 
     def getClientPort(self):
