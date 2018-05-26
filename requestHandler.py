@@ -12,11 +12,7 @@ num_of_stp_per_deg_dec = 430  # Enter the number of steps per degree for the DEC
 class requestHandle(QtCore.QObject):
     def __init__(self, cfg_data, server, client, posObj, servThread, clientThread, positionThread, parent=None):
         super(requestHandle, self).__init__(parent)  # Get the parent of the class
-<<<<<<< HEAD
         self.log_data = logging.getLogger(__name__)  # Get the logging object
-=======
-        self.log_data = logData_Pi.logData(__name__)
->>>>>>> 1af8bffbeff308c015c8344d2f35dfc9751cfdcc
         self.cfg_data = cfg_data
         self.server = server
         self.client = client
@@ -84,14 +80,10 @@ class requestHandle(QtCore.QObject):
         elif request == "Test":  # Respond to the connection testing command
             response = "OK"  # Just send a response to confirm communication
         elif request == "Terminate":  # Send the required response for the successful termination
-<<<<<<< HEAD
             # TODO should we only do logging?
             self.log_data.info("Client requested connection termination.")
-=======
-            self.log_data.log("INFO", "Client requested connection termination.")
             self.server.releaseClient()
             response = "Bye"
->>>>>>> 1af8bffbeff308c015c8344d2f35dfc9751cfdcc
         elif request == "Quit":  # Send the 'Quit' response, which indicates server closing
             # TODO implement a server closure
             response = "Server closing"
@@ -101,13 +93,10 @@ class requestHandle(QtCore.QObject):
         elif request == "SCALE":  # Send the number of steps per degree for each motor
             # TODO send the steps per degree for the motors, may be removed in later release
             response = "SCALEVALS_RA_%d_DEC_%d" % (num_of_stp_per_deg_ra, num_of_stp_per_deg_dec)
-<<<<<<< HEAD
         elif request == "SEND-STEPS-FROM-HOME":
             # TODO implement it correctly to read the current steps from home
             response = "STEPS-FROM-HOME_0_0"  # Right ascension first and the declination
         # elif request == "TRNST":
-=======
->>>>>>> 1af8bffbeff308c015c8344d2f35dfc9751cfdcc
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 
