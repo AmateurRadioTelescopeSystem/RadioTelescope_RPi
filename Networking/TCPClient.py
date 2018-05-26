@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtNetwork
-import logData_Pi
+import logging
 
 
 class TCPClient(QtCore.QObject):
@@ -14,7 +14,7 @@ class TCPClient(QtCore.QObject):
 
     def start(self):
         print("Client thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
-        self.log = logData_Pi.logData(__name__)  # Create the logger
+        self.log_data = logging.getLogger(__name__)  # Create the logger
         self.sock = QtNetwork.QTcpSocket()  # Create the TCP socket
         self.reConnectSigC.connect(self.connect)  # Do the reconnect signal connection
         self.connect()  # Start a connection
@@ -62,7 +62,7 @@ class TCPClient(QtCore.QObject):
     def _error(self):
         # Print and log any error occurred
         print("An error occurred in client: %s" % self.sock.errorString())
-        self.log.log("WARNING", "Some error occurred in client: %s" % self.sock.errorString())
+        self.log_data.warning("Some error occurred in client: %s" % self.sock.errorString())
 
     ''''# This method is called when the thread exits
     def close(self):

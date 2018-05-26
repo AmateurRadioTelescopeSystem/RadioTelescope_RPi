@@ -2,6 +2,7 @@ from PyQt5 import QtCore
 import RPi.GPIO as GPIO
 from functools import partial
 import threading
+import logging
 import time
 
 _steps_half = [[1, 0], [1, 1], [0, 1], [0, 0]]

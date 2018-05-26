@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtNetwork
-import logData_Pi
+import logging
 
 
 class TCPServer(QtCore.QObject):
@@ -11,7 +11,7 @@ class TCPServer(QtCore.QObject):
         super(TCPServer, self).__init__(parent)  # Get the parent of the class
         self.host = cfg.getHost()  # Get the TCP connection host
         self.port = cfg.getPort()  # Get the server port from the settings file
-        self.log_data = logData_Pi.logData(__name__)  # Create the necessary logger
+        self.log_data = logging.getLogger(__name__)  # Create the necessary logger
 
     # This method is called in every thread start
     def start(self):
@@ -56,7 +56,7 @@ class TCPServer(QtCore.QObject):
                 print("The received data is (Server here): %s" % recData)
         except Exception:
             # If data is sent fast, then an exception will occur
-            self.log_data.log("EXCEPT", "A connected client abruptly disconnected. Returning to connection waiting")
+            self.log_data.exception("A connected client abruptly disconnected. Returning to connection waiting")
 
     # If at any moment the connection state is changed, we call this method
     def _disconnected(self):
@@ -73,7 +73,7 @@ class TCPServer(QtCore.QObject):
                 self.socket.waitForBytesWritten()  # Wait for the data to be written
                 # print("Those were sent: %s" % data)
         except Exception:
-            self.log_data.log("EXCEPT", "Problem sending data. See traceback.")
+            self.log_data.exception("Problem sending data. See traceback.")
 
     ''''# This method is called whenever the thread exits
     def close(self):

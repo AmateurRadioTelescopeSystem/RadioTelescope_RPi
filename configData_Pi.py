@@ -1,12 +1,12 @@
 import xml.etree.ElementTree as etree
-import logData_Pi
+import logging
 import os
 
 
 class confDataPi(object):
     # Class constructor
     def __init__(self, filename):
-        self.log_data = logData_Pi.logData(__name__)
+        self.log_data = logging.getLogger(__name__)
         self.filename = filename  # Create a variable with the given filename
         self.parse()  # Parse the XML file
 
@@ -15,8 +15,8 @@ class confDataPi(object):
             self.tree = etree.parse(self.filename)
             self.root = self.tree.getroot()
         except:
-            self.log_data.log("EXCEPT",
-                              "An exception occurred trying parse the XML settings file. See the traceback below.")
+            self.log_data.exception(
+                "An exception occurred trying parse the XML settings file. See the traceback below.")
             exit(1)  # Exit the program since the settings file is important
 
     def getConfig(self, child, subchild):
