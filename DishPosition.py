@@ -11,7 +11,6 @@ class Position(QtCore.QObject):
         self.ind = 0.5
 
     def start(self):
-        print("Dish position thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
 

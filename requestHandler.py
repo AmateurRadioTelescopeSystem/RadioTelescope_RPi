@@ -22,7 +22,6 @@ class requestHandle(QtCore.QObject):
         self.posObj = posObj
 
     def start(self):
-        print("Handler thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
         self.serverThread.start()
         self.clientThread.start()
         self.server.requestProcess.connect(self.process)

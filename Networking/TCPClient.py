@@ -13,7 +13,6 @@ class TCPClient(QtCore.QObject):
         self.cfgData = cfgData  # Create a variable for the cfg file
 
     def start(self):
-        print("Client thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
         self.log_data = logging.getLogger(__name__)  # Create the logger
         self.sock = QtNetwork.QTcpSocket()  # Create the TCP socket
         self.reConnectSigC.connect(self.connect)  # Do the reconnect signal connection
@@ -22,8 +21,6 @@ class TCPClient(QtCore.QObject):
     # The connect function is called if the signal is fired or in the start of the thread
     @QtCore.pyqtSlot(name='reConnectClient')
     def connect(self):
-        print("Client thread from connect ID: %d" % int(QtCore.QThread.currentThreadId()))
-
         if self.sock.state() != QtNetwork.QAbstractSocket.ConnectedState:
             # Get the host and port from the settings file for the client connection
             host = self.cfgData.getClientHost()
@@ -44,7 +41,6 @@ class TCPClient(QtCore.QObject):
         if self.sock.state() == QtNetwork.QAbstractSocket.ConnectedState:
             self.sock.write(data.encode('utf-8'))
             self.sock.waitForBytesWritten()
-            print("Data sent from client: %s" % data)
 
     def _receive(self):
         while self.sock.bytesAvailable() > 0:  # Read all data in que
@@ -60,8 +56,6 @@ class TCPClient(QtCore.QObject):
         self.sendData.connect(self.sendD)  # Send the data to the server when this signal is fired
 
     def _error(self):
-        # Print and log any error occurred
-        print("An error occurred in client: %s" % self.sock.errorString())
         self.log_data.warning("Some error occurred in client: %s" % self.sock.errorString())
 
     ''''# This method is called when the thread exits

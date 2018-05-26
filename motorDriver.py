@@ -17,7 +17,6 @@ _DEC2_PIN = 12
 class MotorInit(QtCore.QObject):
     def __init__(self, parent=None):
         super(MotorInit, self).__init__(parent)
-        print("MotorInit constructor thread ID: %d" % QtCore.QThread.currentThreadId())
         # self.GPIO_Init()  # Initialize the GPIO pins
 
     # TODO see how the initialization and setting will be implemented for the GPIO
@@ -58,7 +57,6 @@ class Stepping(QtCore.QObject):
 
     def __init__(self, parent=None):
         super(Stepping, self).__init__(parent)
-        print("Stepping constructor thread ID: %d" % QtCore.QThread.currentThreadId())
         self.moveMotSig.connect(self.start)
         self.motor = MotorInit()
 

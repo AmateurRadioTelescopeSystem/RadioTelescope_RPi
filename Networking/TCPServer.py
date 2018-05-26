@@ -15,7 +15,6 @@ class TCPServer(QtCore.QObject):
 
     # This method is called in every thread start
     def start(self):
-        print("Server thread started ID: %d" % int(QtCore.QThread.currentThreadId()))
         self.socket = None  # Create the instance os the socket variable to use it later
         self.connectServ()  # Start the server
 
@@ -44,8 +43,9 @@ class TCPServer(QtCore.QObject):
             if self.socket.state() == QtNetwork.QAbstractSocket.ConnectedState:
                 self.socket.readyRead.connect(self._receive)  # If there is pending data get it
                 self.socket.disconnected.connect(self._disconnected)  # Execute the appropriate code on state change
+                self.socket.error.connect(self._error)  # Log any error occurred
                 self.tcpServer.close()  # Stop listening for other connections
-                print("We have new connection")
+                self.log_data.info("Someone connected on server")
 
     # Should we have data pending to be received, this method is called
     def _receive(self):
@@ -53,7 +53,6 @@ class TCPServer(QtCore.QObject):
             while self.socket.bytesAvailable() > 0:  # Read all data in que
                 recData = self.socket.readLine().data().decode('utf-8').rstrip('\n')  # Get the data as a string
                 self.requestProcess.emit(recData)  # Send the received data to be processed
-                print("The received data is (Server here): %s" % recData)
         except Exception:
             # If data is sent fast, then an exception will occur
             self.log_data.exception("A connected client abruptly disconnected. Returning to connection waiting")
@@ -63,6 +62,9 @@ class TCPServer(QtCore.QObject):
         # Do the following if the connection is lost
         self.socket.close()
         self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening again
+
+    def _error(self):
+        self.log_data.warning("Some error occurred in client: %s" % self.sock.errorString())
 
     # This method is called whenever the signal to send data back is fired
     @QtCore.pyqtSlot(str, name='clientDataSend')

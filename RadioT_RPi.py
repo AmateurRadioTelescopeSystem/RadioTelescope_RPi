@@ -58,5 +58,4 @@ if __name__ == '__main__':
     try:
         main()  # Start the program
     except Exception:
-        print("A general exception occurred. See the log file for details.")
         log.exception("A general exception occurred. See traceback.")  # Log any exception
