@@ -13,6 +13,10 @@ _RA2_PIN = 8
 _DEC1_PIN = 10
 _DEC2_PIN = 12
 
+# TODO add the values to the settings file and retrieve them when needed. This will be done to avoid problems
+ra_steps_per_deg = 43200.0 / 15.0
+dec_steps_per_deg = 10000
+
 
 class MotorInit(QtCore.QObject):
     def __init__(self, parent=None):
@@ -73,6 +77,7 @@ class Stepping(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, name='moveMotorSignal')
     def start(self, set: str):
+        print("Motor driver thread: %d" % int(QtCore.QThread.currentThreadId()))
         string = set.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
         frq_ra = round(1.0/float(string[0])*1000.0)  # Convert to period given the frequency
         frq_dec = round(1.0/float(string[1])*1000.0)
@@ -133,7 +138,7 @@ class Stepping(QtCore.QObject):
             self.tempRaCount = 0  # Reset the temporary step count
             self.raMoving = False  # Indicate that the motor has now stopped
 
-        if self.tempRaCount%10 == 0 or self.tempRaCount >= self.ra_step:
+        if self.tempRaCount % 100 == 0 or self.tempRaCount >= self.ra_step:
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
             self.updtStepSig.emit(["RA", self.moveRaCount, "0"])
 
@@ -157,7 +162,7 @@ class Stepping(QtCore.QObject):
             self.tempDecCount = 0
             self.decMoving = False
 
-        if self.tempDecCount%10 == 0 or self.tempDecCount >= self.dec_step:
+        if self.tempDecCount % 100 == 0 or self.tempDecCount >= self.dec_step:
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)
             self.updtStepSig.emit(["DEC", "0", self.moveDecCount])
 
@@ -181,7 +186,7 @@ class Stepping(QtCore.QObject):
             self.tempRaCount = 0
             self.raMoving = False
 
-        if self.tempRaCount%10 == 0 or self.tempRaCount >= abs(self.ra_step):
+        if self.tempRaCount % 100 == 0 or self.tempRaCount >= abs(self.ra_step):
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
             self.updtStepSig.emit(["RA", self.moveRaCount, "0"])
 
@@ -205,6 +210,6 @@ class Stepping(QtCore.QObject):
             self.tempDecCount = 0
             self.decMoving = False
 
-        if self.tempDecCount%10 == 0 or self.tempDecCount >= abs(self.dec_step):
+        if self.tempDecCount % 100 == 0 or self.tempDecCount >= abs(self.dec_step):
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)
             self.updtStepSig.emit(["DEC", "0", self.moveDecCount])

@@ -13,6 +13,7 @@ class TCPClient(QtCore.QObject):
         self.cfgData = cfgData  # Create a variable for the cfg file
 
     def start(self):
+        print("Client thread: %d" % int(QtCore.QThread.currentThreadId()))
         self.log_data = logging.getLogger(__name__)  # Create the logger
         self.sock = QtNetwork.QTcpSocket()  # Create the TCP socket
         self.reConnectSigC.connect(self.connect)  # Do the reconnect signal connection

@@ -19,7 +19,7 @@ class requestHandle(QtCore.QObject):
         self.positionThread = positionThread
         self.serverThread = servThread
         self.clientThread = clientThread
-        self.posObj = posObj
+        self.posObj = posObj  # Dish position object
 
     def start(self):
         self.serverThread.start()
@@ -28,7 +28,8 @@ class requestHandle(QtCore.QObject):
 
         self.motor = motorDriver.MotorInit()
         self.motorMove = motorDriver.Stepping()
-        self.motorMove.motStepSig.connect(self.sendSteps)
+        # self.motorMove.motStepSig.connect(self.sendSteps)
+        self.motorMove.motStepSig.connect(self.posObj.dataSend)
         self.motorMove.updtStepSig.connect(self.step_update)
 
         self.motor.GPIO_Init()  # Initialize the GPIO pins on the Raspberry
@@ -38,10 +39,13 @@ class requestHandle(QtCore.QObject):
         self.motorMove.moveToThread(self.motorThread)
         self.motorThread.start()
 
+        self.positionThread.start()
+
     @QtCore.pyqtSlot(str, name='requestProcess')
     def process(self, request: str):
         # TODO add a process which sends the number of steps done so far
         print("Process handler called, handle msg: %s" % request)
+        print("Process handler thread: %d" % int(QtCore.QThread.currentThreadId()))
         response = "Unrecognizable request"  # Variable to hold the response to be sent
         splt_req = request.split("_")
 
@@ -95,14 +99,18 @@ class requestHandle(QtCore.QObject):
         elif request == "SEND-STEPS-FROM-HOME":
             # TODO implement it correctly to read the current steps from home
             response = "STEPS-FROM-HOME_0_0"  # Right ascension first and the declination
-        # elif request == "TRNST":
+        elif splt_req[0] == "TRNST":
+            ra_steps = float(splt_req[2]) * motorDriver.ra_steps_per_deg
+            dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg
+            freq = 400.0  # Set the maximum frequency
+            self.motorMove.moveMotSig.emit("%s_%s_%s_%s" % (freq, freq, int(ra_steps), int(dec_steps)))
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 
-    @QtCore.pyqtSlot(str, int, name='motorStepCount')
+    ''''@QtCore.pyqtSlot(str, int, name='motorStepCount')
     def sendSteps(self, typ: str, stp: int):
         string = typ + "_" + str(stp) + "\n"
-        self.server.sendDataClient.emit(string)
+        self.server.sendDataClient.emit(string)'''
 
     @QtCore.pyqtSlot(list, name='updateSteps')
     def step_update(self, data: list):

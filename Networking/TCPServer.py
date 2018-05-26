@@ -64,7 +64,7 @@ class TCPServer(QtCore.QObject):
         self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening again
 
     def _error(self):
-        self.log_data.warning("Some error occurred in client: %s" % self.sock.errorString())
+        self.log_data.warning("Some error occurred in client: %s" % self.socket.errorString())
 
     # This method is called whenever the signal to send data back is fired
     @QtCore.pyqtSlot(str, name='clientDataSend')
