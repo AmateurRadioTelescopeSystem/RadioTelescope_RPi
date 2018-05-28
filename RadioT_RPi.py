@@ -5,10 +5,9 @@ from PyQt5 import QtCore
 from Networking import TCPClient, TCPServer
 import configData_Pi
 import requestHandler
-import logging
 import logging.config
 import sys
-import DishPosition
+from Position import DishPosition
 
 log_data = logging.config.fileConfig('log_config.ini')  # Get the and apply the logger configuration
 
