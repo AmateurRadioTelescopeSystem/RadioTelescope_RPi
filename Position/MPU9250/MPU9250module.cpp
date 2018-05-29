@@ -42,27 +42,27 @@ static PyObject* magCalMPU9250(PyObject* self)
 {
 	PyObject* magBias = PyList_New((Py_ssize_t)3);
 	PyObject* magScale = PyList_New((Py_ssize_t)3);
-	PyObject* biasList = PyList_New((Py_ssize_t)6);
+	PyObject* biasList = PyList_New((Py_ssize_t)2);
 	mpu.magCalMPU9250(mpu.magBias, mpu.magScale);
 
 	for(int i = 0; i < 3; i++)
 	{
-		PyList_Append(magBias, Py_BuildValue("d", mpu.magBias[i]));
-		PyList_Append(magScale, Py_BuildValue("d", mpu.magScale[i]));
+		PyList_SetItem(magBias, (Py_ssize_t)i, Py_BuildValue("d", mpu.magBias[i]));
+		PyList_SetItem(magScale, (Py_ssize_t)i, Py_BuildValue("d", mpu.magScale[i]));
 	}
-	PyList_Append(biasList, magBias);
-	PyList_Append(biasList, magScale);
+	PyList_SetItem(biasList, (Py_ssize_t)0, magBias);
+	PyList_SetItem(biasList, (Py_ssize_t)1, magScale);
 
 	return biasList;
 }
 
 static PyObject* MPU9250SelfTest(PyObject* self)
 {
-	PyObject* test_results = PyList_New((Py_ssize_t)3);
+	PyObject* test_results = PyList_New((Py_ssize_t)6);
 	mpu.MPU9250SelfTest(mpu.selfTest);
 
-	for(int i = 0; i < 3; i++)
-		PyList_Append(test_results, Py_BuildValue("d", mpu.selfTest[i]));
+	for(int i = 0; i < 6; i++)
+		PyList_SetItem(test_results, (Py_ssize_t)i, Py_BuildValue("d", mpu.selfTest[i]));
 
 	return test_results;
 }
