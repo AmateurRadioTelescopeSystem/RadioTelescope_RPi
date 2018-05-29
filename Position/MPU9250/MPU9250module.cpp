@@ -107,11 +107,11 @@ static PyObject* readAccelData(PyObject* self)
 {
 	mpu.readAccelData(mpu.accelCount);
 
-	mpu.ax = (float)mpu.accelCount[0] * mpu.aRes;
-	mpu.ay = (float)mpu.accelCount[1] * mpu.aRes;
-	mpu.az = (float)mpu.accelCount[2] * mpu.aRes;
+	mpu.ax = (double)mpu.accelCount[0] * mpu.aRes;
+	mpu.ay = (double)mpu.accelCount[1] * mpu.aRes;
+	mpu.az = (double)mpu.accelCount[2] * mpu.aRes;
 
-	return Py_BuildValue("ddd", mpu.accelCount[0], mpu.accelCount[1], mpu.accelCount[2]);
+	return Py_BuildValue("ddd", mpu.ax, mpu.ay, mpu.az);
 }
 
 static PyObject* readGyroDataRaw(PyObject* self)
@@ -129,11 +129,11 @@ static PyObject* readGyroData(PyObject* self)
 {
 	mpu.readGyroData(mpu.gyroCount);
 
-	mpu.ax = (float)mpu.gyroCount[0] * mpu.gRes;
-	mpu.ay = (float)mpu.gyroCount[1] * mpu.gRes;
-	mpu.az = (float)mpu.gyroCount[2] * mpu.gRes;
+	mpu.gx = (double)mpu.gyroCount[0] * mpu.gRes;
+	mpu.gy = (double)mpu.gyroCount[1] * mpu.gRes;
+	mpu.gz = (double)mpu.gyroCount[2] * mpu.gRes;
 
-	return Py_BuildValue("ddd", mpu.gyroCount[0], mpu.gyroCount[1], mpu.gyroCount[2]);
+	return Py_BuildValue("ddd", mpu.gx, mpu.gy, mpu.gz);
 }
 
 static PyObject* readMagDataRaw(PyObject* self)
@@ -151,11 +151,14 @@ static PyObject* readMagData(PyObject* self)
 {
 	mpu.readMagData(mpu.magCount);
 
-	mpu.ax = (float)mpu.magCount[0] * mpu.mRes;
-	mpu.ay = (float)mpu.magCount[1] * mpu.mRes;
-	mpu.az = (float)mpu.magCount[2] * mpu.mRes;
+	mpu.mx = (double)mpu.magCount[0] * mpu.mRes
+			* mpu.factoryMagCalibration[0] - mpu.magBias[0];
+	mpu.my = (double)mpu.magCount[1] * mpu.mRes
+			* mpu.factoryMagCalibration[1] - mpu.magBias[1];
+	mpu.mz = (double)mpu.magCount[2] * mpu.mRes
+			* mpu.factoryMagCalibration[2] - mpu.magBias[2];
 
-	return Py_BuildValue("ddd", mpu.magCount[0], mpu.magCount[1], mpu.magCount[2]);
+	return Py_BuildValue("ddd", mpu.mx, mpu.my, mpu.mz);
 }
 
 static PyObject* readTempDataRaw(PyObject* self)
