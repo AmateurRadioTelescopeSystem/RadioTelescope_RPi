@@ -59,7 +59,7 @@ static PyObject* magCalMPU9250(PyObject* self)
 static PyObject* MPU9250SelfTest(PyObject* self)
 {
 	PyObject* test_results = PyList_New((Py_ssize_t)3);
-	mpu.initAK8963(mpu.selfTest);
+	mpu.MPU9250SelfTest(mpu.selfTest);
 
 	for(int i = 0; i < 3; i++)
 		PyList_Append(test_results, Py_BuildValue("d", mpu.selfTest[i]));
@@ -170,9 +170,9 @@ static PyObject* readTempDataRaw(PyObject* self)
 
 static PyMethodDef mpu_methods[] =
 {
-    // "PythonName" C-function Name, argument presentation, description
-    {"initMPU9250", (PyCFunction)initMPU9250, METH_NOARGS, ""},
-    {"initAK8963", (PyCFunction)initAK8963, METH_NOARGS, ""},
+    	// "PythonName" C-function Name, argument presentation, description
+    	{"initMPU9250", (PyCFunction)initMPU9250, METH_NOARGS, ""},
+    	{"initAK8963", (PyCFunction)initAK8963, METH_NOARGS, ""},
 	{"calibrateMPU9250", (PyCFunction)calibrateMPU9250, METH_NOARGS, ""},
 	{"magCalMPU9250", (PyCFunction)magCalMPU9250, METH_NOARGS, ""},
 	{"MPU9250SelfTest", (PyCFunction)MPU9250SelfTest, METH_NOARGS, ""},
