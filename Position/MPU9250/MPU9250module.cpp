@@ -1,12 +1,13 @@
-#include <python3.5m/Python.h>
+#include <python3.6m/Python.h>
 #include "MPU9250.h"
 
 static PyObject *mpuError; // Define an exception object for the module, it is a good idea to do it in every module
 MPU9250 mpu; // Create the mpu object to use in functions
 
-static void initMPU9250(PyObject* self)
+static PyObject* initMPU9250(PyObject* self)
 {
 	mpu.initMPU9250();
+	return Py_None;
 }
 
 static PyObject* initAK8963(PyObject* self)
@@ -15,7 +16,7 @@ static PyObject* initAK8963(PyObject* self)
 	mpu.initAK8963(mpu.factoryMagCalibration);
 
 	for(int i = 0; i < 3; i++)
-		PyList_Append(fact_values, Py_BuildValue("d", mpu.factoryMagCalibration[i]));
+		PyList_SetItem(fact_values, (Py_ssize_t)i, Py_BuildValue("d", mpu.factoryMagCalibration[i]));
 
 	return fact_values;
 }
@@ -24,16 +25,16 @@ static PyObject* calibrateMPU9250(PyObject* self)
 {
 	PyObject* gyroBias = PyList_New((Py_ssize_t)3);
 	PyObject* accelBias = PyList_New((Py_ssize_t)3);
-	PyObject* biasList = PyList_New((Py_ssize_t)6);
+	PyObject* biasList = PyList_New((Py_ssize_t)2);
 	mpu.calibrateMPU9250(mpu.gyroBias, mpu.accelBias);
 
 	for(int i = 0; i < 3; i++)
 	{
-		PyList_Append(gyroBias, Py_BuildValue("d", mpu.gyroBias[i]));
-		PyList_Append(accelBias, Py_BuildValue("d", mpu.accelBias[i]));
+		PyList_SetItem(gyroBias, (Py_ssize_t)i, Py_BuildValue("d", mpu.gyroBias[i]));
+		PyList_SetItem(accelBias, (Py_ssize_t)i, Py_BuildValue("d", mpu.accelBias[i]));
 	}
-	PyList_Append(biasList, gyroBias);
-	PyList_Append(biasList, accelBias);
+	PyList_SetItem(biasList, (Py_ssize_t)0, gyroBias);
+	PyList_SetItem(biasList, (Py_ssize_t)1, accelBias);
 
 	return biasList;
 }
@@ -98,7 +99,7 @@ static PyObject* readAccelDataRaw(PyObject* self)
 	mpu.readAccelData(mpu.accelCount);
 
 	for(int i = 0; i < 3; i++)
-		PyList_Append(raw_data, Py_BuildValue("d", mpu.accelCount[i]));
+		PyList_SetItem(raw_data, (Py_ssize_t)i, Py_BuildValue("d", mpu.accelCount[i]));
 
 	return raw_data;
 }
@@ -120,7 +121,7 @@ static PyObject* readGyroDataRaw(PyObject* self)
 	mpu.readGyroData(mpu.gyroCount);
 
 	for(int i = 0; i < 3; i++)
-		PyList_Append(raw_data, Py_BuildValue("d", mpu.gyroCount[i]));
+		PyList_SetItem(raw_data, (Py_ssize_t)i, Py_BuildValue("d", mpu.gyroCount[i]));
 
 	return raw_data;
 }
@@ -142,7 +143,7 @@ static PyObject* readMagDataRaw(PyObject* self)
 	mpu.readMagData(mpu.magCount);
 
 	for(int i = 0; i < 3; i++)
-		PyList_Append(raw_data, Py_BuildValue("d", mpu.magCount[i]));
+		PyList_SetItem(raw_data, (Py_ssize_t)i, Py_BuildValue("d", mpu.magCount[i]));
 
 	return raw_data;
 }
@@ -170,9 +171,10 @@ static PyObject* readTempDataRaw(PyObject* self)
 
 static PyMethodDef mpu_methods[] =
 {
-    	// "PythonName" C-function Name, argument presentation, description
-    	{"initMPU9250", (PyCFunction)initMPU9250, METH_NOARGS, ""},
-    	{"initAK8963", (PyCFunction)initAK8963, METH_NOARGS, ""},
+	// TODO: Add comments below
+    // "PythonName" C-function Name, argument presentation, description
+    {"initMPU9250", (PyCFunction)initMPU9250, METH_NOARGS, ""},
+    {"initAK8963", (PyCFunction)initAK8963, METH_NOARGS, ""},
 	{"calibrateMPU9250", (PyCFunction)calibrateMPU9250, METH_NOARGS, ""},
 	{"magCalMPU9250", (PyCFunction)magCalMPU9250, METH_NOARGS, ""},
 	{"MPU9250SelfTest", (PyCFunction)MPU9250SelfTest, METH_NOARGS, ""},
@@ -201,7 +203,7 @@ static struct PyModuleDef mpu9250Module =
 
 // Initialization used when compiling and using this code
 // A reference is created
-PyMODINIT_FUNC PyInit_mpu(void)
+PyMODINIT_FUNC PyInit_mpu9250(void)
 {
     return PyModule_Create(&mpu9250Module);
 }

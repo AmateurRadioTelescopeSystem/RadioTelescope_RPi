@@ -129,17 +129,17 @@ int16_t MPU9250::readTempData()
 // TODO: Implement updateTime in python
 // Calculate the time the last update took for use in the quaternion filters
 // TODO: This doesn't really belong in this class.
-/*void MPU9250::updateTime()
+void MPU9250::updateTime()
 {
-  Now = micros();
+	cur_time = std::chrono::steady_clock::now();
+	// Set integration time by time elapsed since last filter update
+	deltat = std::chrono::duration_cast<std::chrono::microseconds>((cur_time - lastUpdate));
+	deltat /= 1000000.0;
+	lastUpdate = cur_time;
 
-  // Set integration time by time elapsed since last filter update
-  deltat = ((Now - lastUpdate) / 1000000.0f);
-  lastUpdate = Now;
-
-  sum += deltat; // sum for averaging filter update rate
-  sumCount++;
-}*/
+	sum += deltat; // sum for averaging filter update rate
+	sumCount++;
+}
 
 
 void MPU9250::initAK8963(double * destination)
@@ -731,4 +731,3 @@ uint8_t MPU9250::readBytes(uint8_t devAddress, uint8_t registerAddress, uint8_t 
 
 	return bytes_read;
 }
-
