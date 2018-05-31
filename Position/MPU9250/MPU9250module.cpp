@@ -172,9 +172,9 @@ static PyObject* readTempDataRaw(PyObject* self)
 static PyMethodDef mpu_methods[] =
 {
 	// TODO: Add comments below
-    // "PythonName" C-function Name, argument presentation, description
-    {"initMPU9250", (PyCFunction)initMPU9250, METH_NOARGS, ""},
-    {"initAK8963", (PyCFunction)initAK8963, METH_NOARGS, ""},
+	// "PythonName" C-function Name, argument presentation, description
+	{"initMPU9250", (PyCFunction)initMPU9250, METH_NOARGS, ""},
+	{"initAK8963", (PyCFunction)initAK8963, METH_NOARGS, ""},
 	{"calibrateMPU9250", (PyCFunction)calibrateMPU9250, METH_NOARGS, ""},
 	{"magCalMPU9250", (PyCFunction)magCalMPU9250, METH_NOARGS, ""},
 	{"MPU9250SelfTest", (PyCFunction)MPU9250SelfTest, METH_NOARGS, ""},
@@ -190,14 +190,13 @@ static PyMethodDef mpu_methods[] =
 	{"readTempDataRaw", (PyCFunction)readTempDataRaw, METH_NOARGS, ""},
 	{NULL, NULL, 0, NULL} //Sentinel, tell the API that we finished defining table
 };
-
 static struct PyModuleDef mpu9250Module =
 {
-    PyModuleDef_HEAD_INIT,
-    "mpu9250",
-    "A wrapper for MPU9250 9-axis sensor",
-    -1,
-    mpu_methods
+	PyModuleDef_HEAD_INIT,
+	"mpu9250",
+	"A wrapper for MPU9250 9-axis sensor",
+	-1,
+	mpu_methods
 };
 
 
@@ -205,5 +204,5 @@ static struct PyModuleDef mpu9250Module =
 // A reference is created
 PyMODINIT_FUNC PyInit_mpu9250(void)
 {
-    return PyModule_Create(&mpu9250Module);
+	return PyModule_Create(&mpu9250Module);
 }
