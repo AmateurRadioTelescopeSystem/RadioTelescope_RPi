@@ -1,10 +1,3 @@
-/*
- * MPU9250_Constants.h
- *
- *  Created on: May 30, 2018
- *      Author: dimitris
- */
-
 #ifndef MPU9250_CONSTANTS_H_
 #define MPU9250_CONSTANTS_H_
 
