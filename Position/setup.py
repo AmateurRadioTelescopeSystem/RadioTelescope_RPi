@@ -3,7 +3,7 @@ from distutils.core import setup, Extension
 quaternion_module = Extension('quaternion',
                               sources=['Quaternion/quaternionModule.cpp', 'Quaternion/quaternionFilters.cpp'],
                               extra_compile_args=['-std=c++11'])
-mpu_module = Extension('mpu9250', sources=['MPU9250/MPU9250module.cpp', 'MPU9250/MPU9250.cpp'],
+mpu_module = Extension('mpu9250', sources=['MPU9250/MPU9250module.cpp', 'MPU9250/MPU9250.cpp', 'Quaternion/quaternionFilters.cpp'],
                        extra_compile_args=['-std=c++11'])
 
 setup(name='Quaternion',

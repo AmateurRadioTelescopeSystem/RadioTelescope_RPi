@@ -5,6 +5,9 @@
 //====== and temperature data
 //==============================================================================
 
+auto _cur_time = std::chrono::steady_clock::now(); // used to calculate integration interval
+auto _last_time = std::chrono::steady_clock::now();
+
 MPU9250::MPU9250() // Uses I2C communication by default
 {
 	if( (i2c_descriptor = open(i2c_bus, O_RDWR)) < 0 )
@@ -131,14 +134,11 @@ int16_t MPU9250::readTempData()
 // TODO: This doesn't really belong in this class.
 void MPU9250::updateTime()
 {
-	cur_time = std::chrono::steady_clock::now();
+	_cur_time = std::chrono::steady_clock::now();
 	// Set integration time by time elapsed since last filter update
-	deltat = std::chrono::duration_cast<std::chrono::microseconds>((cur_time - lastUpdate));
+	deltat = std::chrono::duration_cast<std::chrono::microseconds>(_cur_time - _last_time).count();
 	deltat /= 1000000.0;
-	lastUpdate = cur_time;
-
-	sum += deltat; // sum for averaging filter update rate
-	sumCount++;
+	_last_time = _cur_time;
 }
 
 

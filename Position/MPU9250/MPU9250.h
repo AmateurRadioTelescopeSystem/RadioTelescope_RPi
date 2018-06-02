@@ -34,6 +34,8 @@
 #define AK8963_ADDRESS  0x0C   // Address of magnetometer
 
 #define READ_FLAG 0x80
+#define DEG_TO_RAD 0.0174532925
+#define RAD_TO_DEG 57.295779513
 
 class MPU9250
 {
@@ -81,20 +83,15 @@ protected:
 	uint8_t Mmode = M_8HZ;
 
 	uint8_t writeByte(uint8_t address, uint8_t registerAddress, uint8_t data);
-	uint8_t readByte(uint8_t address, uint8_t regAddress);
 	uint8_t readBytes(uint8_t address, uint8_t registerAddress, uint8_t count,
 			uint8_t *dest = NULL);
 
 public:
 	double pitch, yaw, roll;
-	double temperature;   // Stores the real internal chip temperature in Celsius
+	double temperature;   // Stores the real internal chip temperature in Celcius
 	int16_t tempCount;   // Temperature raw count output
-	uint32_t delt_t = 0; // Used to control display output rate
 
-	uint32_t count = 0, sumCount = 0; // used to control display output rate
-	double deltat = 0.0f, sum = 0.0f;  // integration interval for both filter schemes
-	uint32_t lastUpdate = 0; // used to calculate integration interval
-	auto cur_time = std::chrono::steady_clock::now(); // used to calculate integration interval
+	double deltat = 0.0;  // integration interval for both filter schemes
 
 	int16_t gyroCount[3];   // Stores the 16-bit signed gyro sensor output
 	int16_t magCount[3];    // Stores the 16-bit signed magnetometer sensor output
@@ -122,13 +119,14 @@ public:
 	void readGyroData(int16_t *);
 	void readMagData(int16_t *);
 	int16_t readTempData();
-	// TODO: implement in the file using Qt
+
 	void updateTime();
 	void initAK8963(double *);
 	void initMPU9250();
 	void calibrateMPU9250(double * gyroBias, double * accelBias);
 	void MPU9250SelfTest(double * destination);
 	void magCalMPU9250(double * dest1, double * dest2);
+	uint8_t readByte(uint8_t address, uint8_t regAddress);
 };  // class MPU9250
 
 #endif // _MPU9250_H_

@@ -1,7 +1,8 @@
 #include <python3.6m/Python.h>
 #include "MPU9250.h"
+#include "../Quaternion/quaternionFilters.h"
 
-static PyObject *mpuError; // Define an exception object for the module, it is a good idea to do it in every module
+// static PyObject *mpuError; // Define an exception object for the module, it is a good idea to do it in every module
 MPU9250 mpu; // Create the mpu object to use in functions
 
 static PyObject* initMPU9250(PyObject* self)
@@ -169,6 +170,50 @@ static PyObject* readTempDataRaw(PyObject* self)
 	return Py_BuildValue("h", temperature);
 }
 
+static PyObject* getData(PyObject* self)
+{
+	double* q_val = NULL;
+	if(mpu.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
+	{
+		mpu.readAccelData(mpu.accelCount);
+
+		mpu.ax = (double)mpu.accelCount[0] * mpu.aRes;
+		mpu.ay = (double)mpu.accelCount[1] * mpu.aRes;
+		mpu.az = (double)mpu.accelCount[2] * mpu.aRes;
+
+		mpu.readGyroData(mpu.gyroCount);
+
+		mpu.gx = (double)mpu.gyroCount[0] * mpu.gRes;
+		mpu.gy = (double)mpu.gyroCount[1] * mpu.gRes;
+		mpu.gz = (double)mpu.gyroCount[2] * mpu.gRes;
+
+		mpu.readMagData(mpu.magCount);
+
+		mpu.mx = (double)mpu.magCount[0] * mpu.mRes
+						* mpu.factoryMagCalibration[0] - mpu.magBias[0];
+		mpu.my = (double)mpu.magCount[1] * mpu.mRes
+						* mpu.factoryMagCalibration[1] - mpu.magBias[1];
+		mpu.mz = (double)mpu.magCount[2] * mpu.mRes
+						* mpu.factoryMagCalibration[2] - mpu.magBias[2];
+	}
+	mpu.updateTime();
+	MahonyQuaternionUpdate(mpu.ax, mpu.ay, mpu.az,
+			mpu.gx * DEG_TO_RAD, mpu.gy * DEG_TO_RAD, mpu.gz * DEG_TO_RAD,
+			mpu.my, mpu.mx, mpu.mz, mpu.deltat);
+	q_val = getQ();
+
+
+	mpu.yaw   = atan2(2.0 * (q_val[1] * q_val[2] + q_val[0] * q_val[3]),
+					q_val[0] * q_val[0] + q_val[1]
+						* q_val[1] - q_val[2] * q_val[2] - q_val[3] * q_val[3]) * RAD_TO_DEG;
+	mpu.pitch = -asin(2.0 * (q_val[1] * q_val[3] - q_val[0] * q_val[2])) * RAD_TO_DEG;
+	mpu.roll  = atan2(2.0 * (q_val[0] * q_val[1] + q_val[2] * q_val[3]),
+					q_val[0] * q_val[0] - q_val[1]
+						* q_val[1] - q_val[2] * q_val[2] + q_val[3] * q_val[3]) * RAD_TO_DEG;
+
+	return Py_BuildValue("ddd", mpu.yaw, mpu.pitch, mpu.roll);
+}
+
 static PyMethodDef mpu_methods[] =
 {
 	// TODO: Add comments below
@@ -188,8 +233,10 @@ static PyMethodDef mpu_methods[] =
 	{"readMagDataRaw", (PyCFunction)readMagDataRaw, METH_NOARGS, ""},
 	{"readMagData", (PyCFunction)readMagData, METH_NOARGS, ""},
 	{"readTempDataRaw", (PyCFunction)readTempDataRaw, METH_NOARGS, ""},
+	{"getData", (PyCFunction)getData, METH_NOARGS, ""},
 	{NULL, NULL, 0, NULL} //Sentinel, tell the API that we finished defining table
 };
+
 static struct PyModuleDef mpu9250Module =
 {
 	PyModuleDef_HEAD_INIT,
