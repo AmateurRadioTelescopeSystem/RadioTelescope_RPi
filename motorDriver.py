@@ -1,9 +1,5 @@
 from PyQt5 import QtCore
 import RPi.GPIO as GPIO
-from functools import partial
-import threading
-import logging
-import time
 
 _steps_half = [[1, 0], [1, 1], [0, 1], [0, 0]]
 
@@ -23,7 +19,7 @@ class MotorInit(QtCore.QObject):
         super(MotorInit, self).__init__(parent)
         # self.GPIO_Init()  # Initialize the GPIO pins
 
-    # TODO see how the initialization and setting will be implemented for the GPIO
+    # TODO see how the initialization and setting will be implemented for the GPIO (partially complete)
     def GPIO_Init(self):
         # Set the pin numbering mode
         GPIO.setmode(GPIO.BOARD)
@@ -52,8 +48,6 @@ class MotorInit(QtCore.QObject):
             GPIO.output(_DEC2_PIN, c2)
 
 
-# TODO implement the time delay for the stepping using a QTimer
-# TODO test with LEDs how it functions
 class Stepping(QtCore.QObject):
     moveMotSig = QtCore.pyqtSignal(str, name='moveMotorSignal')  # Signal triggered when motor move is desired
     motStepSig = QtCore.pyqtSignal(str, int, name='motorStepCount')  # Triggered when step count is sent

@@ -1,5 +1,4 @@
 from PyQt5 import QtCore
-from functools import partial
 import motorDriver
 import logging
 import sys
@@ -102,7 +101,8 @@ class requestHandle(QtCore.QObject):
         elif splt_req[0] == "TRNST":
             ra_steps = float(splt_req[2]) * motorDriver.ra_steps_per_deg
             dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg
-            freq = 400.0  # Set the maximum frequency
+            print(int(ra_steps), int(dec_steps))
+            freq = 200.0  # Set the maximum frequency
             self.motorMove.moveMotSig.emit("%s_%s_%s_%s" % (freq, freq, int(ra_steps), int(dec_steps)))
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
