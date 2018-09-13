@@ -42,7 +42,6 @@ class requestHandle(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, name='requestProcess')
     def process(self, request: str):
-        # TODO add a process which sends the number of steps done so far
         print("Process handler called, handle msg: %s" % request)
         print("Process handler thread: %d" % int(QtCore.QThread.currentThreadId()))
         response = "Unrecognizable request"  # Variable to hold the response to be sent
@@ -95,15 +94,18 @@ class requestHandle(QtCore.QObject):
         elif request == "SCALE":  # Send the number of steps per degree for each motor
             # TODO send the steps per degree for the motors, may be removed in later release
             response = "SCALEVALS_RA_%d_DEC_%d" % (num_of_stp_per_deg_ra, num_of_stp_per_deg_dec)
-        elif request == "SEND-STEPS-FROM-HOME":
-            # TODO implement it correctly to read the current steps from home
-            response = "STEPS-FROM-HOME_0_0"  # Right ascension first and the declination
+        elif request == "SEND_HOME_STEPS":
+            home_stps = self.cfg_data.getSteps()  # Get the saved steps
+            response = "STEPS-FROM-HOME_%.0f_%.0f" % (home_stps[0], home_stps[1])  # Right ascension first value
+        elif request == "RETURN_HOME":  # Return to home position
+            freq = 200.0  # Set the maximum frequency
+            home_stps = self.cfg_data.getSteps()  # Get the saved steps
+            self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, -int(home_stps[0]), -int(home_stps[1])))
         elif splt_req[0] == "TRNST":
             ra_steps = float(splt_req[2]) * motorDriver.ra_steps_per_deg
             dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg
-            print(int(ra_steps), int(dec_steps))
             freq = 200.0  # Set the maximum frequency
-            self.motorMove.moveMotSig.emit("%s_%s_%s_%s" % (freq, freq, int(ra_steps), int(dec_steps)))
+            self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 

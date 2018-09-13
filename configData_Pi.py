@@ -8,7 +8,15 @@ class confDataPi(object):
     def __init__(self, filename):
         self.log_data = logging.getLogger(__name__)
         self.filename = filename  # Create a variable with the given filename
-        self.parse()  # Parse the XML file
+
+        # Parse the XML file
+        try:
+            self.tree = etree.parse(self.filename)
+            self.root = self.tree.getroot()
+        except Exception:
+            self.log_data.exception(
+                "An exception occurred trying parse the XML settings file. See the traceback below.")
+            exit(1)  # Exit the program since the settings file is important
 
     def parse(self):
         try:
