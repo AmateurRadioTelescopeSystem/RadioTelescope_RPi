@@ -78,7 +78,7 @@ class requestHandle(QtCore.QObject):
                     self.motorMove.moveMotSig.emit("%s_%s_%s_%s" % (freq, freq, step_ra, step_dec))
             elif splt_req[1] == "STOP":
                 self.motorMove.moveMotSig.emit("-1_-1_0_0")  # Send a negative frequency to indicate stopping
-            response = "Command executed for man cont"
+            response = "STARTED_MOVING"
 
         elif request == "Test":  # Respond to the connection testing command
             response = "OK"  # Just send a response to confirm communication
