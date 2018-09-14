@@ -32,6 +32,7 @@ class requestHandle(QtCore.QObject):
         self.motorMove.motStepSig.connect(self.posObj.dataSend)
         self.motorMove.updtStepSig.connect(self.step_update)
         self.motorMove.motStopSig.connect(partial(self.server.sendDataClient.emit, "STOPPED_MOVING"))
+        self.motorMove.motStartSig.connect(partial(self.server.sendDataClient.emit, "STARTED_MOVING"))
 
         self.motor.GPIO_Init()  # Initialize the GPIO pins on the Raspberry
 
@@ -78,7 +79,6 @@ class requestHandle(QtCore.QObject):
                     self.motorMove.moveMotSig.emit("%s_%s_%s_%s" % (freq, freq, step_ra, step_dec))
             elif splt_req[1] == "STOP":
                 self.motorMove.moveMotSig.emit("-1_-1_0_0")  # Send a negative frequency to indicate stopping
-            response = "STARTED_MOVING"
 
         elif request == "Test":  # Respond to the connection testing command
             response = "OK"  # Just send a response to confirm communication
@@ -108,7 +108,6 @@ class requestHandle(QtCore.QObject):
             dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg
             freq = 200.0  # Set the maximum frequency
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
-            response = "STARTED_MOVING"
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 

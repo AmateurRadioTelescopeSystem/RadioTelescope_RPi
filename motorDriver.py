@@ -53,6 +53,7 @@ class Stepping(QtCore.QObject):
     motStepSig = QtCore.pyqtSignal(str, int, name='motorStepCount')  # Triggered when step count is sent
     updtStepSig = QtCore.pyqtSignal(list, name='updateSteps')
     motStopSig = QtCore.pyqtSignal(name='motionStopNotifierSignal')
+    motStartSig = QtCore.pyqtSignal(name='motionStartNotifierSignal')
 
     def __init__(self, parent=None):
         super(Stepping, self).__init__(parent)
@@ -100,6 +101,7 @@ class Stepping(QtCore.QObject):
                     self.raMoving = True  # Indicate that the motor is moving
                     self.timer_ra.setInterval(frq_ra)
                     self.timer_ra.start()
+                    self.motStartSig.emit()
 
             if not self.decMoving:
                 self.dec_step = int(string[3])  # Get the DEC steps
@@ -113,6 +115,7 @@ class Stepping(QtCore.QObject):
                     self.decMoving = True
                     self.timer_dec.setInterval(frq_dec)
                     self.timer_dec.start()
+                    self.motStartSig.eimt()
 
     def move_ra_fwd(self):
         j = 0  # Initialize the local variable
