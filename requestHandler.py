@@ -31,7 +31,7 @@ class requestHandle(QtCore.QObject):
         # self.motorMove.motStepSig.connect(self.sendSteps)
         self.motorMove.motStepSig.connect(self.posObj.dataSend)
         self.motorMove.updtStepSig.connect(self.step_update)
-        self.motorMove.motStopSig.connect(partial(self.server.sendDataClient, "STOPPED_MOVING"))
+        self.motorMove.motStopSig.connect(partial(self.server.sendDataClient.emit, "STOPPED_MOVING"))
 
         self.motor.GPIO_Init()  # Initialize the GPIO pins on the Raspberry
 
