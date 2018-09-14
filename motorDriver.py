@@ -52,6 +52,7 @@ class Stepping(QtCore.QObject):
     moveMotSig = QtCore.pyqtSignal(str, name='moveMotorSignal')  # Signal triggered when motor move is desired
     motStepSig = QtCore.pyqtSignal(str, int, name='motorStepCount')  # Triggered when step count is sent
     updtStepSig = QtCore.pyqtSignal(list, name='updateSteps')
+    motStopSig = QtCore.pyqtSignal(name='motionStopNotifierSignal')
 
     def __init__(self, parent=None):
         super(Stepping, self).__init__(parent)
@@ -85,6 +86,7 @@ class Stepping(QtCore.QObject):
                 self.timer_dec.stop()
                 self.tempDecCount = 0
                 self.decMoving = False
+            self.motStopSig.emit()  # Notify the client that we stopped
         else:
             if not self.raMoving:
                 self.ra_step = int(string[2])  # Get the sent RA steps
@@ -131,6 +133,8 @@ class Stepping(QtCore.QObject):
             self.timer_ra.timeout.disconnect()  # Disconnect any signals
             self.tempRaCount = 0  # Reset the temporary step count
             self.raMoving = False  # Indicate that the motor has now stopped
+        if not self.decMoving:
+            self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
 
         if self.tempRaCount % 100 == 0 or self.tempRaCount >= self.ra_step:
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
@@ -155,6 +159,8 @@ class Stepping(QtCore.QObject):
             self.timer_dec.timeout.disconnect()
             self.tempDecCount = 0
             self.decMoving = False
+        if not self.raMoving:
+            self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
 
         if self.tempDecCount % 100 == 0 or self.tempDecCount >= self.dec_step:
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)
@@ -179,6 +185,8 @@ class Stepping(QtCore.QObject):
             self.timer_ra.timeout.disconnect()
             self.tempRaCount = 0
             self.raMoving = False
+        if not self.decMoving:
+            self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
 
         if self.tempRaCount % 100 == 0 or self.tempRaCount >= abs(self.ra_step):
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
@@ -203,6 +211,8 @@ class Stepping(QtCore.QObject):
             self.timer_dec.timeout.disconnect()
             self.tempDecCount = 0
             self.decMoving = False
+        if not self.raMoving:
+            self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
 
         if self.tempDecCount % 100 == 0 or self.tempDecCount >= abs(self.dec_step):
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)

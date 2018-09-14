@@ -1,4 +1,5 @@
 from PyQt5 import QtCore
+from functools import partial
 import motorDriver
 import logging
 import sys
@@ -30,6 +31,7 @@ class requestHandle(QtCore.QObject):
         # self.motorMove.motStepSig.connect(self.sendSteps)
         self.motorMove.motStepSig.connect(self.posObj.dataSend)
         self.motorMove.updtStepSig.connect(self.step_update)
+        self.motorMove.motStopSig.connect(partial(self.server.sendDataClient, "STOPPED_MOVING"))
 
         self.motor.GPIO_Init()  # Initialize the GPIO pins on the Raspberry
 
@@ -106,6 +108,7 @@ class requestHandle(QtCore.QObject):
             dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg
             freq = 200.0  # Set the maximum frequency
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
+            response = "STARTED_MOVING"
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 
