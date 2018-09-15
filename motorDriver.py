@@ -115,7 +115,7 @@ class Stepping(QtCore.QObject):
                     self.decMoving = True
                     self.timer_dec.setInterval(frq_dec)
                     self.timer_dec.start()
-                    self.motStartSig.eimt()
+                    self.motStartSig.emit()
 
     def move_ra_fwd(self):
         j = 0  # Initialize the local variable
