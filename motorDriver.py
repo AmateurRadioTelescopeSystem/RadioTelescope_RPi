@@ -55,14 +55,14 @@ class Stepping(QtCore.QObject):
     motStopSig = QtCore.pyqtSignal(name='motionStopNotifierSignal')
     motStartSig = QtCore.pyqtSignal(name='motionStartNotifierSignal')
 
-    def __init__(self, parent=None):
+    def __init__(self, init_ra, init_dec, parent=None):
         super(Stepping, self).__init__(parent)
         self.moveMotSig.connect(self.start)
         self.motor = MotorInit()
 
         # Initialize all the counter variables
-        self.moveRaCount = 0
-        self.moveDecCount = 0
+        self.moveRaCount = 0 + int(init_ra)
+        self.moveDecCount = 0 + int(init_dec)
         self.tempRaCount = 0
         self.tempDecCount = 0
 

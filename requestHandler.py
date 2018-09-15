@@ -26,8 +26,10 @@ class requestHandle(QtCore.QObject):
         self.clientThread.start()
         self.server.requestProcess.connect(self.process)
 
+        cur_stps = self.cfg_data.getSteps()  # Get the current steps from home to add them initially
+
         self.motor = motorDriver.MotorInit()
-        self.motorMove = motorDriver.Stepping()
+        self.motorMove = motorDriver.Stepping(cur_stps[0], cur_stps[1])
         # self.motorMove.motStepSig.connect(self.sendSteps)
         self.motorMove.motStepSig.connect(self.posObj.dataSend)
         self.motorMove.updtStepSig.connect(self.step_update)
