@@ -5,8 +5,8 @@ import logging
 import sys
 
 _steps_from_zero = 0  # Number of steps from true south and home position
-num_of_stp_per_deg_ra = 100  # Enter the number of steps per degree for the RA motor (43200 steps/h or 2880 steps/deg)
-num_of_stp_per_deg_dec = 430  # Enter the number of steps per degree for the DEC motor (10000 steps/deg)
+num_of_stp_per_deg_ra = 2880  # Enter the number of steps per degree for the RA motor (43200 steps/h or 2880 steps/deg)
+num_of_stp_per_deg_dec = 10000  # Enter the number of steps per degree for the DEC motor (10000 steps/deg)
 
 
 class requestHandle(QtCore.QObject):
