@@ -287,5 +287,7 @@ fabric.properties
 
 *.log
 dummyServer.py
+settings_pi.xml
+log_config.ini
 
 # End of https://www.gitignore.io/api/c,c++,linux,python,windows
