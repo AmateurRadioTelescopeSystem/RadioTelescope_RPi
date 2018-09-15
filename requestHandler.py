@@ -106,9 +106,10 @@ class requestHandle(QtCore.QObject):
             home_stps = self.cfg_data.getSteps()  # Get the saved steps
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, -int(home_stps[0]), -int(home_stps[1])))
         elif splt_req[0] == "TRNST":
-            ra_steps = float(splt_req[2]) * motorDriver.ra_steps_per_deg
-            dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg
             freq = 200.0  # Set the maximum frequency
+            cur_stps = self.cfg_data.getSteps()  # Read the current steps from home to compensate for it
+            ra_steps = float(splt_req[2]) * motorDriver.ra_steps_per_deg - float(cur_stps[0])
+            dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg - float(cur_stps[1])
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
