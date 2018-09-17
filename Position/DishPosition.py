@@ -1,4 +1,7 @@
 from PyQt5 import QtCore
+import mpu9250
+import logging
+import math
 
 
 class Position(QtCore.QObject):
@@ -6,17 +9,21 @@ class Position(QtCore.QObject):
         super(Position, self).__init__(parent)
         self.tcpClient = tcpClient
         self.ra = 1.2
-        # self.dec = -37.53793
         self.dec = -2.52
         self.ind = 0.5
         self.ra_step_number = 0
         self.dec_step_number = 0
         self.ij = True
+        self.log = logging.getLogger(__name__)
 
     def start(self):
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(1000)
+        # self.timer = QtCore.QTimer()
+        # self.timer.setInterval(1000)
 
+        try:
+            mpu9250.initMPU9250()  # Initialize the MPU sensor
+        except:
+            self.log.exception("Problem initializing the MPU sensor. See traceback below:")
         # self.timer.timeout.connect(self.dataSend)
         # self.timer.start()
 
@@ -38,11 +45,11 @@ class Position(QtCore.QObject):
         elif self.dec <= -90.0:
             self.dec = 90.0 - self.dec'''
 
-        self.ra = self.ra -0.005
-        if self.ra >= 24.0:
-            self.ra = self.ra - 24.0
+        self.ra = self.ra - 0.05
+        if self.ra >= 23.9997:
+            self.ra = self.ra - 23.9997
         elif self.ra <= 0.0:
-            self.ra = 24.0 - self.ra
+            self.ra = 23.9997 - self.ra
         if type == "RASTEPS":
             self.ra_step_number = steps
         elif type == "DECSTEPS":
@@ -52,7 +59,11 @@ class Position(QtCore.QObject):
         self.tcpClient.sendData.emit(string)
 
     def getPosition(self):
-        return [self.ra, self.dec]
+        # TODO Test the accuracy and reliability of the angle calculations
+        acc = mpu9250.readAccelData()  # Get the acceleration data from the sensor
+        roll = math.atan2(acc[1], acc[2])  # Calculate roll
+        pitch = math.atan2(-acc[0], math.sqrt(acc[1]*acc[1] + acc[2]*acc[2]))  # Calculate pitch
+        return [math.degrees(pitch), math.degrees(roll)]  # Roll is the declination and pitch is the hour angle
 
     '''def close(self):
         print("Dish Pos thread is closing")
