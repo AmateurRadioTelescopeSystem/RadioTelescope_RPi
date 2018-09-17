@@ -87,6 +87,9 @@ class Stepping(QtCore.QObject):
                 self.timer_dec.stop()
                 self.tempDecCount = 0
                 self.decMoving = False
+            self.motStepSig.emit("RASTEPS", self.moveRaCount)  # Send the necessary step updates
+            self.motStepSig.emit("DECSTEPS", self.moveDecCount)
+            self.updtStepSig.emit(["BOTH", self.moveRaCount, self.moveDecCount])  # Send the total steps
             self.motStopSig.emit()  # Notify the client that we stopped
         else:
             if not self.raMoving:
