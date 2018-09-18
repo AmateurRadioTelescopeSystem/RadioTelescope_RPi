@@ -12,7 +12,7 @@ MPU9250::MPU9250() // Uses I2C communication by default
 {
 	if( (i2c_descriptor = open(i2c_bus, O_RDWR)) < 0 )
 	{
-		std::cout << "Failed to open the I2C bus" << std::endl;
+		throw "Failed to open the I2C bus";
 	}
 }
 
@@ -669,7 +669,7 @@ int8_t MPU9250::i2cAddr(int devAddress)
 {
 	if( ioctl(i2c_descriptor, I2C_SLAVE, devAddress) < 0 )
 	{
-		std::cout << "Error accessing I2C bus." << std::endl;
+		throw "Error accessing I2C bus.";
 		return -1;
 	}
 	return 0;
@@ -687,7 +687,7 @@ uint8_t MPU9250::writeByte(uint8_t devAddress, uint8_t registerAddress, uint8_t 
 
 	bytes_written = write(i2c_descriptor, buf, 2);
 	if(bytes_written == -1)
-		std::cerr << "Problem with writing to I2C" << std::endl;
+		throw "Problem with writing to I2C";
 
 	return bytes_written;
 }
@@ -699,12 +699,12 @@ uint8_t MPU9250::readByte(uint8_t devAddress, uint8_t registerAddress)
 	uint8_t buf[2] = {registerAddress};
 	if((write(i2c_descriptor, buf, 1)) != 1)
 	{
-		std::cerr << "Error communicating" << std::endl;
+		throw "Error communicating on I2C.";
 	}
 
 	if( read(i2c_descriptor, buf, 1) != 1 )
 	{
-		std::cerr << "Failed to read from I2C bus." << std::endl;
+		throw "Failed to read from I2C bus.";
 		return 2;
 	}
 
@@ -721,7 +721,7 @@ uint8_t MPU9250::readBytes(uint8_t devAddress, uint8_t registerAddress, uint8_t 
 
 	if((write(i2c_descriptor, buf, 1)) != 1)
 	{
-		std::cerr << "Error communicating" << std::endl;
+		throw "Error communicating on I2C.";
 	}
 
 	if(!dest)

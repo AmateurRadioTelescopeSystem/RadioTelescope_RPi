@@ -7,14 +7,31 @@ MPU9250 mpu; // Create the mpu object to use in functions
 
 static PyObject* initMPU9250(PyObject* self)
 {
-	mpu.initMPU9250();
+	try
+	{
+		mpu.initMPU9250();
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 	return Py_None;
 }
 
 static PyObject* initAK8963(PyObject* self)
 {
 	PyObject* fact_values = PyList_New((Py_ssize_t)3);
-	mpu.initAK8963(mpu.factoryMagCalibration);
+
+	try
+	{
+		mpu.initAK8963(mpu.factoryMagCalibration);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	for(int i = 0; i < 3; i++)
 		PyList_SetItem(fact_values, (Py_ssize_t)i, Py_BuildValue("d", mpu.factoryMagCalibration[i]));
@@ -27,7 +44,16 @@ static PyObject* calibrateMPU9250(PyObject* self)
 	PyObject* gyroBias = PyList_New((Py_ssize_t)3);
 	PyObject* accelBias = PyList_New((Py_ssize_t)3);
 	PyObject* biasList = PyList_New((Py_ssize_t)2);
-	mpu.calibrateMPU9250(mpu.gyroBias, mpu.accelBias);
+
+	try
+	{
+		mpu.calibrateMPU9250(mpu.gyroBias, mpu.accelBias);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	for(int i = 0; i < 3; i++)
 	{
@@ -45,7 +71,16 @@ static PyObject* magCalMPU9250(PyObject* self)
 	PyObject* magBias = PyList_New((Py_ssize_t)3);
 	PyObject* magScale = PyList_New((Py_ssize_t)3);
 	PyObject* biasList = PyList_New((Py_ssize_t)2);
-	mpu.magCalMPU9250(mpu.magBias, mpu.magScale);
+
+	try
+	{
+		mpu.magCalMPU9250(mpu.magBias, mpu.magScale);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	for(int i = 0; i < 3; i++)
 	{
@@ -61,7 +96,16 @@ static PyObject* magCalMPU9250(PyObject* self)
 static PyObject* MPU9250SelfTest(PyObject* self)
 {
 	PyObject* test_results = PyList_New((Py_ssize_t)6);
-	mpu.MPU9250SelfTest(mpu.selfTest);
+
+	try
+	{
+		mpu.MPU9250SelfTest(mpu.selfTest);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	for(int i = 0; i < 6; i++)
 		PyList_SetItem(test_results, (Py_ssize_t)i, Py_BuildValue("d", mpu.selfTest[i]));
@@ -97,7 +141,16 @@ static PyObject* getMres(PyObject* self)
 static PyObject* readAccelDataRaw(PyObject* self)
 {
 	PyObject* raw_data = PyList_New((Py_ssize_t)3);
-	mpu.readAccelData(mpu.accelCount);
+
+	try
+	{
+		mpu.readAccelData(mpu.accelCount);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	for(int i = 0; i < 3; i++)
 		PyList_SetItem(raw_data, (Py_ssize_t)i, Py_BuildValue("d", mpu.accelCount[i]));
@@ -107,7 +160,15 @@ static PyObject* readAccelDataRaw(PyObject* self)
 
 static PyObject* readAccelData(PyObject* self)
 {
-	mpu.readAccelData(mpu.accelCount);
+	try
+	{
+		mpu.readAccelData(mpu.accelCount);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	mpu.ax = (double)mpu.accelCount[0] * mpu.aRes;
 	mpu.ay = (double)mpu.accelCount[1] * mpu.aRes;
@@ -119,7 +180,16 @@ static PyObject* readAccelData(PyObject* self)
 static PyObject* readGyroDataRaw(PyObject* self)
 {
 	PyObject* raw_data = PyList_New((Py_ssize_t)3);
-	mpu.readGyroData(mpu.gyroCount);
+
+	try
+	{
+		mpu.readGyroData(mpu.gyroCount);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	for(int i = 0; i < 3; i++)
 		PyList_SetItem(raw_data, (Py_ssize_t)i, Py_BuildValue("d", mpu.gyroCount[i]));
@@ -129,7 +199,15 @@ static PyObject* readGyroDataRaw(PyObject* self)
 
 static PyObject* readGyroData(PyObject* self)
 {
-	mpu.readGyroData(mpu.gyroCount);
+	try
+	{
+		mpu.readGyroData(mpu.gyroCount);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	mpu.gx = (double)mpu.gyroCount[0] * mpu.gRes;
 	mpu.gy = (double)mpu.gyroCount[1] * mpu.gRes;
@@ -141,7 +219,16 @@ static PyObject* readGyroData(PyObject* self)
 static PyObject* readMagDataRaw(PyObject* self)
 {
 	PyObject* raw_data = PyList_New((Py_ssize_t)3);
-	mpu.readMagData(mpu.magCount);
+
+	try
+	{
+		mpu.readMagData(mpu.magCount);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	for(int i = 0; i < 3; i++)
 		PyList_SetItem(raw_data, (Py_ssize_t)i, Py_BuildValue("d", mpu.magCount[i]));
@@ -151,7 +238,15 @@ static PyObject* readMagDataRaw(PyObject* self)
 
 static PyObject* readMagData(PyObject* self)
 {
-	mpu.readMagData(mpu.magCount);
+	try
+	{
+		mpu.readMagData(mpu.magCount);
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	mpu.mx = (double)mpu.magCount[0] * mpu.mRes
 			* mpu.factoryMagCalibration[0] - mpu.magBias[0];
@@ -165,7 +260,17 @@ static PyObject* readMagData(PyObject* self)
 
 static PyObject* readTempDataRaw(PyObject* self)
 {
-	int16_t temperature = mpu.readTempData();
+	int16_t temperature = 0;  //Initialize the variable
+
+	try
+	{
+		int16_t temperature = mpu.readTempData();
+	}
+	catch(const char *msg)
+	{
+		PyErr_Format(PyExc_OSError, "OSError: %s", msg);
+		return NULL;
+	}
 
 	return Py_BuildValue("h", temperature);
 }
