@@ -264,7 +264,7 @@ static PyObject* readTempDataRaw(PyObject* self)
 
 	try
 	{
-		int16_t temperature = mpu.readTempData();
+                temperature = mpu.readTempData();
 	}
 	catch(const char *msg)
 	{
