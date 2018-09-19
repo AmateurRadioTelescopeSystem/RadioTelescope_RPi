@@ -1,4 +1,4 @@
-#include <Python.h>
+#include <python3.5/Python.h>
 #include "quaternionFilters.h"
 
 /* The quaternion code wa taken from an Arduino library made by SparkFun

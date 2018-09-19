@@ -1,4 +1,4 @@
-#include <Python.h>
+#include <python3.5/Python.h>
 #include "MPU9250.h"
 #include "../Quaternion/quaternionFilters.h"
 
