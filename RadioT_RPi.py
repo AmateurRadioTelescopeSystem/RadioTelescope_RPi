@@ -3,14 +3,12 @@
 # Import the required libraries and classes
 from PyQt5 import QtCore
 from Networking import TCPClient, TCPServer
-import configData_Pi
 import requestHandler
 import logging.config
 import sys
 import os
 from Position import DishPosition
-import defaultData
-
+from Configuration import defaultData, configData_Pi
 
 # TODO Test the functionality of the server and client
 # TODO make the app "exitable" so killing is not required for termination
