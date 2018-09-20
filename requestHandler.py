@@ -66,6 +66,7 @@ class requestHandle(QtCore.QObject):
             self.client.sendData.emit("POSUPDATE_RA_%.5f_DEC_%.5f\n" % (float(cur_pos[0]), float(cur_pos[1])))
             response = "POS_UPDT_SENT"
         elif request == "STOP":  # TODO implement the stop request in a better way
+            self.motor.clean_IO()  # Clean-up GPIO before exit
             sys.exit()  # Exit from the application as per request
         elif splt_req[0] == "MANCONT":  # TODO implement the manual control in a better way
             if len(splt_req) == 5:

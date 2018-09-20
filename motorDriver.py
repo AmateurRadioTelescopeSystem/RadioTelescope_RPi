@@ -65,6 +65,8 @@ class Stepping(QtCore.QObject):
         self.moveDecCount = 0 + int(init_dec)
         self.tempRaCount = 0
         self.tempDecCount = 0
+        self.ra_step = 0
+        self.dec_step = 0
 
         self.timer_ra = None
         self.timer_dec = None
@@ -77,6 +79,10 @@ class Stepping(QtCore.QObject):
         string = set.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
         frq_ra = round(1.0/float(string[0])*1000.0)  # Convert to period given the frequency
         frq_dec = round(1.0/float(string[1])*1000.0)
+
+        # Send the saved steps initially
+        self.motStepSig.emit("RASTEPS", self.moveRaCount)
+        self.motStepSig.emit("DECSTEPS", self.moveDecCount)
 
         if frq_ra < 0.0 or frq_dec < 0.0:
             if self.timer_ra is not None:

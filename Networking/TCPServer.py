@@ -15,10 +15,18 @@ class TCPServer(QtCore.QObject):
 
     # This method is called in every thread start
     def start(self):
+        """
+        This function is called whenever the thread is started. It does the necessary first initializations.
+        :return: Nothing
+        """
         self.socket = None  # Create the instance os the socket variable to use it later
         self.connectServ()  # Start the server
 
     def connectServ(self):
+        """
+        Whenever we want a new TCP connection this function is called.
+        :return: Nothing
+        """
         if self.host == "localhost":
             self.host = QtNetwork.QHostAddress.LocalHost
         else:
@@ -37,6 +45,10 @@ class TCPServer(QtCore.QObject):
 
     # Whenever there is new connection, we call this method
     def _new_connection(self):
+        """
+        Called whenever there is a new connection.
+        :return: Nothing
+        """
         if self.tcpServer.hasPendingConnections():
             self.socket = self.tcpServer.nextPendingConnection()  # Returns a new QTcpSocket
 
