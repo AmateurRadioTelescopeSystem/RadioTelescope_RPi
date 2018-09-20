@@ -66,7 +66,7 @@ def main():
     clientThread.started.connect(client.start)
     #clientThread.finished.connect(client.close)
 
-    posObj = DishPosition.Position(client)
+    posObj = DishPosition.Position(client, cfg)
     posThread = QtCore.QThread()
     posObj.moveToThread(posThread)
     posThread.started.connect(posObj.start)

@@ -5,9 +5,10 @@ import math
 
 
 class Position(QtCore.QObject):
-    def __init__(self, tcpClient, parent=None):
+    def __init__(self, tcpClient, cfg_data, parent=None):
         super(Position, self).__init__(parent)
         self.tcpClient = tcpClient
+        self.cfg = cfg_data
         self.ra = 1.2
         self.dec = -2.52
         self.ind = 0.5
@@ -19,11 +20,14 @@ class Position(QtCore.QObject):
     def start(self):
         # self.timer = QtCore.QTimer()
         # self.timer.setInterval(1000)
+        print("Position thread started")
 
+        '''
         try:
             mpu9250.initMPU9250()  # Initialize the MPU sensor
         except:
             self.log.exception("Problem initializing the MPU sensor. See traceback below:")
+        '''
         # self.timer.timeout.connect(self.dataSend)
         # self.timer.start()
 
@@ -32,7 +36,7 @@ class Position(QtCore.QObject):
         if self.ij:
             print("Dish position thread: %d" % int(QtCore.QThread.currentThreadId()))
             self.ij = False
-        self.ind = self.ind - 0.005
+        # self.ind = self.ind - 0.005
         '''if self.dec >= 90.0 or self.dec <= -90.0:
             self.dec = self.dec - self.ind
         else:
@@ -45,11 +49,20 @@ class Position(QtCore.QObject):
         elif self.dec <= -90.0:
             self.dec = 90.0 - self.dec'''
 
-        self.ra = self.ra - 0.05
+        # self.ra = self.ra - 0.05
+        '''if self.ra >= 23.9997:
+            self.ra = self.ra - 23.9997
+        elif self.ra <= 0.0:
+            self.ra = 23.9997 - self.ra'''
+
+        posit = self.getPosition()
+        self.ra = posit[0]
+        self.dec = posit[1]
         if self.ra >= 23.9997:
             self.ra = self.ra - 23.9997
         elif self.ra <= 0.0:
             self.ra = 23.9997 - self.ra
+
         if type == "RASTEPS":
             self.ra_step_number = steps
         elif type == "DECSTEPS":
@@ -60,10 +73,17 @@ class Position(QtCore.QObject):
 
     def getPosition(self):
         # TODO Test the accuracy and reliability of the angle calculations
+        '''
         acc = mpu9250.readAccelData()  # Get the acceleration data from the sensor
         roll = math.atan2(acc[1], acc[2])  # Calculate roll
         pitch = math.atan2(-acc[0], math.sqrt(acc[1]*acc[1] + acc[2]*acc[2]))  # Calculate pitch
         return [math.degrees(pitch), math.degrees(roll)]  # Roll is the declination and pitch is the hour angle
+        '''
+        stps = self.cfg.getSteps()
+        ha = float(stps[0])/43200.0
+        dec = float(stps[1])/10000.0
+        print("Pos %f, %f" % (ha, dec))
+        return [float(ha), float(dec)]
 
     '''def close(self):
         print("Dish Pos thread is closing")
