@@ -58,10 +58,6 @@ class Position(QtCore.QObject):
         posit = self.getPosition()
         self.ra = posit[0]
         self.dec = posit[1]
-        if self.ra >= 23.9997:
-            self.ra = self.ra - 23.9997
-        elif self.ra <= 0.0:
-            self.ra = 23.9997 - self.ra
 
         if type == "RASTEPS":
             self.ra_step_number = steps
@@ -82,6 +78,10 @@ class Position(QtCore.QObject):
         stps = self.cfg.getSteps()
         ha = float(stps[0])/43200.0
         dec = float(stps[1])/10000.0
+        if ha < 0.0:
+            ha = 23.9997 - ha
+        elif ha >= 23.997:
+            ha = ha - 23.997
         print("Pos %f, %f" % (ha, dec))
         return [float(ha), float(dec)]
 
