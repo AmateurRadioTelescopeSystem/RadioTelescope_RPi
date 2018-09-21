@@ -9,13 +9,15 @@ class Position(QtCore.QObject):
         super(Position, self).__init__(parent)
         self.tcpClient = tcpClient
         self.cfg = cfg_data
-        self.ra = 1.2
-        self.dec = -2.52
-        self.ind = 0.5
-        self.ra_step_number = 0
-        self.dec_step_number = 0
-        self.ij = True
-        self.log = logging.getLogger(__name__)
+        self.ra = 0
+        self.dec = 0
+
+        # Initialize the steps upon the creation of this class
+        steps = cfg_data.getSteps()
+        self.ra_step_number = steps[0]
+        self.dec_step_number = steps[1]
+
+        self.log = logging.getLogger(__name__)  # Initialize the logger
 
     def start(self):
         # self.timer = QtCore.QTimer()
@@ -33,28 +35,12 @@ class Position(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, int, name='motorStepCount')
     def dataSend(self, type: str, steps: int):
-        if self.ij:
-            print("Dish position thread: %d" % int(QtCore.QThread.currentThreadId()))
-            self.ij = False
-        # self.ind = self.ind - 0.005
-        '''if self.dec >= 90.0 or self.dec <= -90.0:
-            self.dec = self.dec - self.ind
-        else:
-            self.dec = self.dec + self.ind'''
-        '''self.ra = self.ra + self.ind
-        self.dec = self.dec + self.ind
-
-        if self.dec >= 90.0:
-            self.dec = self.dec - 90.0
-        elif self.dec <= -90.0:
-            self.dec = 90.0 - self.dec'''
-
-        # self.ra = self.ra - 0.05
-        '''if self.ra >= 23.9997:
-            self.ra = self.ra - 23.9997
-        elif self.ra <= 0.0:
-            self.ra = 23.9997 - self.ra'''
-
+        """
+        Sends position information alongside with the step number.
+        :param type: What is the motor that is triggering this signal
+        :param steps: Number of steps sent from the signal trigger
+        :return: Nothing
+        """
         posit = self.getPosition()
         self.ra = posit[0]
         self.dec = posit[1]
