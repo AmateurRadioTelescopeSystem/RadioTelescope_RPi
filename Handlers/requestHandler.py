@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from functools import partial
-import motorDriver
+from Handlers import motorDriver
 import logging
 import sys
 
