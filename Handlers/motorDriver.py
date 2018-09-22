@@ -4,10 +4,11 @@ import RPi.GPIO as GPIO
 _steps_half = [[1, 0], [1, 1], [0, 1], [0, 0]]
 
 # Set the pin numbers where the output is going to be
-_RA1_PIN = 7
-_RA2_PIN = 8
-_DEC1_PIN = 10
-_DEC2_PIN = 12
+_RA1_PIN = 11
+_RA2_PIN = 13
+_DEC1_PIN = 15
+_DEC2_PIN = 16
+_MOTORS_ENABLE_PIN = 7
 
 # TODO add the values to the settings file and retrieve them when needed. This will be done to avoid problems
 ra_steps_per_deg = 43200.0 / 15.0
@@ -29,12 +30,14 @@ class MotorInit(QtCore.QObject):
         GPIO.setup(_RA2_PIN, GPIO.OUT)
         GPIO.setup(_DEC1_PIN, GPIO.OUT)
         GPIO.setup(_DEC2_PIN, GPIO.OUT)
+        GPIO.setup(_MOTORS_ENABLE_PIN, GPIO.OUT)
 
         # Set the pins to LOW for the initial setup
         GPIO.output(_RA1_PIN, 0)
         GPIO.output(_RA2_PIN, 0)
         GPIO.output(_DEC1_PIN, 0)
         GPIO.output(_DEC2_PIN, 0)
+        GPIO.output(_MOTORS_ENABLE_PIN, 0)
 
     def clean_IO(self):
         GPIO.cleanup()
@@ -46,6 +49,15 @@ class MotorInit(QtCore.QObject):
         else:
             GPIO.output(_DEC1_PIN, c1)
             GPIO.output(_DEC2_PIN, c2)
+
+    def enabler(self, enable: bool):
+        if enable:
+            GPIO.output(_MOTORS_ENABLE_PIN, 1)
+        else:
+            GPIO.output(_MOTORS_ENABLE_PIN, 0)
+
+    def motor_status(self):
+        return GPIO.input(_MOTORS_ENABLE_PIN)
 
 
 class Stepping(QtCore.QObject):
@@ -76,55 +88,56 @@ class Stepping(QtCore.QObject):
     @QtCore.pyqtSlot(str, name='moveMotorSignal')
     def start(self, set: str):
         print("Motor driver thread: %d" % int(QtCore.QThread.currentThreadId()))
-        string = set.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
-        frq_ra = round(1.0/float(string[0])*1000.0)  # Convert to period given the frequency
-        frq_dec = round(1.0/float(string[1])*1000.0)
+        if self.motor.motor_status():
+            string = set.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
+            frq_ra = round(1.0/float(string[0])*1000.0)  # Convert to period given the frequency
+            frq_dec = round(1.0/float(string[1])*1000.0)
 
-        # Send the saved steps initially
-        self.motStepSig.emit("RASTEPS", self.moveRaCount)
-        self.motStepSig.emit("DECSTEPS", self.moveDecCount)
-
-        if frq_ra < 0.0 or frq_dec < 0.0:
-            if self.timer_ra is not None:
-                self.timer_ra.stop()
-                self.tempRaCount = 0
-                self.raMoving = False
-            if self.timer_dec is not None:
-                self.timer_dec.stop()
-                self.tempDecCount = 0
-                self.decMoving = False
-            self.motStepSig.emit("RASTEPS", self.moveRaCount)  # Send the necessary step updates
+            # Send the saved steps initially
+            self.motStepSig.emit("RASTEPS", self.moveRaCount)
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)
-            self.updtStepSig.emit(["BOTH", self.moveRaCount, self.moveDecCount])  # Send the total steps
-            self.motStopSig.emit()  # Notify the client that we stopped
-        else:
-            if not self.raMoving:
-                self.ra_step = int(string[2])  # Get the sent RA steps
-                self.timer_ra = QtCore.QTimer()
-                if self.ra_step > 0:  # Forward direction
-                    self.timer_ra.timeout.connect(self.move_ra_fwd)
-                else:
-                    self.timer_ra.timeout.connect(self.move_ra_back)
 
-                if self.ra_step != 0:
-                    self.raMoving = True  # Indicate that the motor is moving
-                    self.timer_ra.setInterval(frq_ra)
-                    self.timer_ra.start()
-                    self.motStartSig.emit()
+            if frq_ra < 0.0 or frq_dec < 0.0:
+                if self.timer_ra is not None:
+                    self.timer_ra.stop()
+                    self.tempRaCount = 0
+                    self.raMoving = False
+                if self.timer_dec is not None:
+                    self.timer_dec.stop()
+                    self.tempDecCount = 0
+                    self.decMoving = False
+                self.motStepSig.emit("RASTEPS", self.moveRaCount)  # Send the necessary step updates
+                self.motStepSig.emit("DECSTEPS", self.moveDecCount)
+                self.updtStepSig.emit(["BOTH", self.moveRaCount, self.moveDecCount])  # Send the total steps
+                self.motStopSig.emit()  # Notify the client that we stopped
+            else:
+                if not self.raMoving:
+                    self.ra_step = int(string[2])  # Get the sent RA steps
+                    self.timer_ra = QtCore.QTimer()
+                    if self.ra_step > 0:  # Forward direction
+                        self.timer_ra.timeout.connect(self.move_ra_fwd)
+                    else:
+                        self.timer_ra.timeout.connect(self.move_ra_back)
 
-            if not self.decMoving:
-                self.dec_step = int(string[3])  # Get the DEC steps
-                self.timer_dec = QtCore.QTimer()
-                if self.dec_step > 0:
-                    self.timer_dec.timeout.connect(self.move_dec_fwd)
-                else:
-                    self.timer_dec.timeout.connect(self.move_dec_back)
+                    if self.ra_step != 0:
+                        self.raMoving = True  # Indicate that the motor is moving
+                        self.timer_ra.setInterval(frq_ra)
+                        self.timer_ra.start()
+                        self.motStartSig.emit()
 
-                if self.dec_step != 0:
-                    self.decMoving = True
-                    self.timer_dec.setInterval(frq_dec)
-                    self.timer_dec.start()
-                    self.motStartSig.emit()
+                if not self.decMoving:
+                    self.dec_step = int(string[3])  # Get the DEC steps
+                    self.timer_dec = QtCore.QTimer()
+                    if self.dec_step > 0:
+                        self.timer_dec.timeout.connect(self.move_dec_fwd)
+                    else:
+                        self.timer_dec.timeout.connect(self.move_dec_back)
+
+                    if self.dec_step != 0:
+                        self.decMoving = True
+                        self.timer_dec.setInterval(frq_dec)
+                        self.timer_dec.start()
+                        self.motStartSig.emit()
 
     def move_ra_fwd(self):
         j = 0  # Initialize the local variable

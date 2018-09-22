@@ -6,6 +6,7 @@ class TCPServer(QtCore.QObject):
     # Create the signals to be used for data handling
     sendDataClient = QtCore.pyqtSignal(str, name='clientDataSend')  # Send the data to client
     requestProcess = QtCore.pyqtSignal(str, name='requestProcess')  # Send the received data for further processing
+    clientDisconnected = QtCore.pyqtSignal(name='cleintDisconnected')  # Report a disconnected client from the server
 
     def __init__(self, cfg, parent=None):
         super(TCPServer, self).__init__(parent)  # Get the parent of the class
@@ -73,6 +74,7 @@ class TCPServer(QtCore.QObject):
     def _disconnected(self):
         # Do the following if the connection is lost
         self.socket.close()
+        self.clientDisconnected.emit()
         self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening again
 
     def _error(self):
