@@ -37,7 +37,7 @@ class MotorInit(QtCore.QObject):
         GPIO.output(_RA2_PIN, 0)
         GPIO.output(_DEC1_PIN, 0)
         GPIO.output(_DEC2_PIN, 0)
-        GPIO.output(_MOTORS_ENABLE_PIN, 0)
+        GPIO.output(_MOTORS_ENABLE_PIN, 1)  # Set to HIGH as needed by the switch
 
     def clean_IO(self):
         GPIO.cleanup()
@@ -52,12 +52,12 @@ class MotorInit(QtCore.QObject):
 
     def enabler(self, enable: bool):
         if enable:
-            GPIO.output(_MOTORS_ENABLE_PIN, 1)
+            GPIO.output(_MOTORS_ENABLE_PIN, 0)  # Set to LOW to change the relay switch
         else:
-            GPIO.output(_MOTORS_ENABLE_PIN, 0)
+            GPIO.output(_MOTORS_ENABLE_PIN, 1)  # Set to high to let switch fall to default position
 
     def motor_status(self):
-        return GPIO.input(_MOTORS_ENABLE_PIN)
+        return not GPIO.input(_MOTORS_ENABLE_PIN)  # We have inverted logic in enabling/disabling
 
 
 class Stepping(QtCore.QObject):
