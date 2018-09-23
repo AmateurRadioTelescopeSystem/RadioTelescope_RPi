@@ -87,7 +87,6 @@ class Stepping(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, name='moveMotorSignal')
     def start(self, set: str):
-        print("Motor driver thread: %d" % int(QtCore.QThread.currentThreadId()))
         if self.motor.motor_status():
             string = set.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
             frq_ra = round(1.0/float(string[0])*1000.0)  # Convert to period given the frequency

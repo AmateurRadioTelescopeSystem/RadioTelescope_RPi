@@ -24,7 +24,7 @@ except Exception as excep:
 # Check if the logging configuration file exists
 try:
     if not os.path.exists('log_config.ini'):
-        print("Logging configuration file not found. Creating the default.")
+        print("Logging configuration file not found. Creating the default.", file=sys.stderr)
         log_file = open("log_config.ini", "w+")  # Open the logging configuration file in writing mode
         log_file.write(defaultData.log_config_str)  # Write the default dat to the file
         log_file.close()  # Close the file, since no other operation required
@@ -35,7 +35,7 @@ except Exception as excep:
 # Check if the settings XML file exists
 try:
     if not os.path.exists('settings_pi.xml'):
-        print("Settings file not found. Creating the default.")
+        print("Settings file not found. Creating the default.", file=sys.stderr)
         setngs_file = open("settings_pi.xml", "w+")  # Open the settings file in writing mode
         setngs_file.write(defaultData.settings_xml_str)  # Write the default dat to the file
         setngs_file.close()  # Close the file, since no other operation required
@@ -47,37 +47,36 @@ log_data = logging.config.fileConfig('log_config.ini')  # Get the and apply the 
 
 
 def main():
-    cfg = configData_Pi.confDataPi("settings_pi.xml")
+    cfg = configData_Pi.confDataPi("settings_pi.xml")  # Parse the configuration file and create the object
 
-    app = QtCore.QCoreApplication(sys.argv)
-    print("Program started, Main thread ID: %d" % QtCore.QThread.currentThreadId())
+    app = QtCore.QCoreApplication(sys.argv)  # Create application object
 
     # Initialize the server
     server = TCPServer.TCPServer(cfg)
     serverThread = QtCore.QThread()
     server.moveToThread(serverThread)
     serverThread.started.connect(server.start)
-    #serverThread.finished.connect(server.close)
+    # serverThread.finished.connect(server.close)
 
     # Initialize the client
     client = TCPClient.TCPClient(cfg)
     clientThread = QtCore.QThread()
     client.moveToThread(clientThread)
     clientThread.started.connect(client.start)
-    #clientThread.finished.connect(client.close)
+    # clientThread.finished.connect(client.close)
 
     posObj = DishPosition.Position(client, cfg)
     posThread = QtCore.QThread()
     posObj.moveToThread(posThread)
     posThread.started.connect(posObj.start)
-    #posThread.finished.connect(posObj.close)
+    # posThread.finished.connect(posObj.close)
 
     # Initialize and start the handler
     request_hndl = requestHandler.requestHandle(cfg, server, client, posObj, serverThread, clientThread, posThread)
     handlerThread = QtCore.QThread()
     request_hndl.moveToThread(handlerThread)
     handlerThread.started.connect(request_hndl.start)
-    #handlerThread.finished.connect(request_hndl.close)
+    # handlerThread.finished.connect(request_hndl.close)
     handlerThread.start()  # Start the handler thread
 
     sys.exit(app.exec_())  # Start the event loop

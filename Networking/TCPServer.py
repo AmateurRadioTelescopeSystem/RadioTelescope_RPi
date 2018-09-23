@@ -87,7 +87,6 @@ class TCPServer(QtCore.QObject):
             if self.socket.state() == QtNetwork.QAbstractSocket.ConnectedState:
                 self.socket.write(data.encode('utf-8'))  # Send data back to client
                 self.socket.waitForBytesWritten()  # Wait for the data to be written
-                # print("Those were sent: %s" % data)
         except Exception:
             self.log_data.exception("Problem sending data. See traceback.")
 

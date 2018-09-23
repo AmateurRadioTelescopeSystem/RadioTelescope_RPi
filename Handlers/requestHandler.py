@@ -49,8 +49,7 @@ class requestHandle(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, name='requestProcess')
     def process(self, request: str):
-        print("Process handler called, handle msg: %s" % request)
-        print("Process handler thread: %d" % int(QtCore.QThread.currentThreadId()))
+        self.log_data.debug("Process handler called, handle msg: %s" % request)
         response = "Unrecognizable request\n"  # Variable to hold the response to be sent
         splt_req = request.split("_")
 
