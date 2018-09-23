@@ -1,4 +1,6 @@
+import os
 import sys
+import zlib
 import logging
 import traceback
 import threading
@@ -7,8 +9,10 @@ import logging.handlers
 
 
 # ============================================================================
-# Define Log Handler
+# Define a Custom Log File Handler
 # Initial code: https://mattgathu.github.io/multiprocessing-logging-in-python/
+# Code for compression, retrieved from logging docs:
+# https://docs.python.org/3/howto/logging-cookbook.html#using-a-rotator-and-namer-to-customize-log-rotation-processing
 # ============================================================================
 class CustomLogHandler(logging.Handler):
     """multiprocessing log handler
@@ -17,14 +21,23 @@ class CustomLogHandler(logging.Handler):
     to log to the same file by using a queue.
 
     """
-    def __init__(self, fname, whn, enc, utc):
+    def __init__(self, filename, when, backup_count, enc, utc):
+        """
+        Class constructor to make the necessary initializations.
+        :param filename: The name of the logging file
+        :param when: When to rotate
+        :param backup_count: Max number of old files to keep
+        :param enc: Log file's encoding
+        :param utc: UTC to be used as logging time
+        """
         logging.Handler.__init__(self)
 
         self.queue = multiprocessing.Queue(-1)
-        self.fname = fname
-        self.when = whn
+        self.fname = filename
+        self.when = when
         self.encoding = enc
         self.utc = utc
+        self.backup_count = backup_count
         self._handler = None
 
         thrd = threading.Thread(target=self.receive)
@@ -32,13 +45,24 @@ class CustomLogHandler(logging.Handler):
         thrd.start()
 
     def setFormatter(self, fmt):
+        """
+        Set the formatter for the file handler
+        :param fmt: Formatter string as passed from the configuration
+        :return: Nothing
+        """
         self.fmt = fmt  # Save the format to use it for the handler later
 
     def receive(self):
+        """
+        Receive the logging message an perform logging.
+        :return: Nothing
+        """
         self._handler = logging.handlers.TimedRotatingFileHandler\
-            (self.fname, self.when, encoding=self.encoding, utc=self.utc)
+            (self.fname, self.when, backupCount=self.backup_count, encoding=self.encoding, utc=self.utc)
         logging.Handler.setFormatter(self, self.fmt)
         self._handler.setFormatter(self.fmt)
+        self._handler.rotator = self.compressor  # Compress the old file in every rotation
+        self._handler.namer = self.namer  # Name the compressed file
         while True:
             try:
                 record = self.queue.get()  # Get the data from the queue
@@ -57,9 +81,19 @@ class CustomLogHandler(logging.Handler):
                 traceback.print_exc(file=sys.stderr)
 
     def send(self, s):
+        """
+        Send the log message to the logging queue, in order to be logged.
+        :param s: Message object
+        :return: Nothing
+        """
         self.queue.put_nowait(s)
 
     def emit(self, record):
+        """
+        Emit the log recording signal by sending the message to the queue
+        :param record: Message record
+        :return: Nothing
+        """
         try:
             self.send(record)
         except (KeyboardInterrupt, SystemExit):
@@ -68,6 +102,32 @@ class CustomLogHandler(logging.Handler):
             self.handleError(record)
 
     def close(self):
+        """
+        Close the handler upon request.
+        :return: Nothing
+        """
         if self._handler is not None:
             self._handler.close()
         logging.Handler.close(self)
+
+    def compressor(self, source, dest):
+        """
+        Compress the file on every rotation
+        :param source: Source file name
+        :param dest: Destination file name
+        :return: Nothing
+        """
+        with open(source, "rb") as sf:
+            data = sf.read()
+            compressed = zlib.compress(data, 9)
+            with open(dest, "wb") as df:
+                df.write(compressed)
+        os.remove(source)
+
+    def namer(self, name):
+        """
+        Append the appropriate suffix to the compressed file name
+        :param name: File name to append suffix
+        :return: Nothing
+        """
+        return name + ".gz"
