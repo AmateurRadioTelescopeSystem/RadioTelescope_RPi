@@ -1,6 +1,6 @@
 import os
 import sys
-import zlib
+import gzip
 import logging
 import traceback
 import threading
@@ -117,12 +117,12 @@ class CustomLogHandler(logging.Handler):
         :param dest: Destination file name
         :return: Nothing
         """
-        with open(source, "rb") as sf:
-            data = sf.read()
-            compressed = zlib.compress(data, 9)
-            with open(dest, "wb") as df:
-                df.write(compressed)
-        os.remove(source)
+        with open(source, "rb") as source_file:
+            data = source_file.read()  # Read the data from file and compress them
+            compressed = gzip.compress(data, 9)  # Get the compressed binary data
+            with open(dest, "wb") as dest_file:
+                dest_file.write(compressed)  # Save the compressed data to file
+        os.remove(source) # Remove uncompressed file
 
     def namer(self, name):
         """
