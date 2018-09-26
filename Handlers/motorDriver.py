@@ -63,9 +63,9 @@ class MotorInit(QtCore.QObject):
 class Stepping(QtCore.QObject):
     moveMotSig = QtCore.pyqtSignal(str, name='moveMotorSignal')  # Signal triggered when motor move is desired
     motStepSig = QtCore.pyqtSignal(str, int, name='motorStepCount')  # Triggered when step count is sent
-    updtStepSig = QtCore.pyqtSignal(list, name='updateSteps')
-    motStopSig = QtCore.pyqtSignal(name='motionStopNotifierSignal')
-    motStartSig = QtCore.pyqtSignal(name='motionStartNotifierSignal')
+    updtStepSig = QtCore.pyqtSignal(list, name='updateSteps')  # Update the steps signal
+    motStopSig = QtCore.pyqtSignal(name='motionStopNotifierSignal')  # Signal is emitted when the motors stop
+    motStartSig = QtCore.pyqtSignal(name='motionStartNotifierSignal')  # Signal is emitted upon motor start up
 
     def __init__(self, init_ra, init_dec, parent=None):
         super(Stepping, self).__init__(parent)
@@ -87,7 +87,7 @@ class Stepping(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, name='moveMotorSignal')
     def start(self, set: str):
-        if self.motor.motor_status():
+        if self.motor.motor_status() is True:
             string = set.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
             frq_ra = round(1.0/float(string[0])*1000.0)  # Convert to period given the frequency
             frq_dec = round(1.0/float(string[1])*1000.0)
@@ -105,14 +105,14 @@ class Stepping(QtCore.QObject):
                     self.timer_dec.stop()
                     self.tempDecCount = 0
                     self.decMoving = False
-                self.motStepSig.emit("RASTEPS", self.moveRaCount)  # Send the necessary step updates
+                self.motStepSig.emit("RASTEPS", self.moveRaCount)  # Send the necessary step updates on stop
                 self.motStepSig.emit("DECSTEPS", self.moveDecCount)
                 self.updtStepSig.emit(["BOTH", self.moveRaCount, self.moveDecCount])  # Send the total steps
                 self.motStopSig.emit()  # Notify the client that we stopped
             else:
                 if not self.raMoving:
                     self.ra_step = int(string[2])  # Get the sent RA steps
-                    self.timer_ra = QtCore.QTimer()
+                    self.timer_ra = QtCore.QTimer()  # Create the Qt timer object
                     if self.ra_step > 0:  # Forward direction
                         self.timer_ra.timeout.connect(self.move_ra_fwd)
                     else:
