@@ -158,8 +158,9 @@ class requestHandle(QtCore.QObject):
                 ra_steps = 345600  # Enough steps to track for 8 hours
                 dec_steps = 0  # Declination is not changing is stellar objects, so we do not move this motor
             else:
-                freq1 = self.trk_speed_ra
-                freq2 = self.trk_speed_dec
+                freq1 = 12 + self.trk_speed_ra*num_of_stp_per_deg_ra
+                freq2 = self.trk_speed_dec*num_of_stp_per_deg_dec
+
                 ra_steps = 345600  # Enough steps to track for 8 hours
                 dec_steps = 345600  # Enough steps for 8 hours of tracking
 
