@@ -66,6 +66,7 @@ class Stepping(QtCore.QObject):
     updtStepSig = QtCore.pyqtSignal(list, name='updateSteps')  # Update the steps signal
     motStopSig = QtCore.pyqtSignal(name='motionStopNotifierSignal')  # Signal is emitted when the motors stop
     motStartSig = QtCore.pyqtSignal(name='motionStartNotifierSignal')  # Signal is emitted upon motor start up
+    trackStatSig = QtCore.pyqtSignal(str, name='trackingStatusSignal')  # Send the tracking status
 
     def __init__(self, init_ra, init_dec, parent=None):
         super(Stepping, self).__init__(parent)
@@ -84,6 +85,7 @@ class Stepping(QtCore.QObject):
         self.timer_dec = None
         self.raMoving = False
         self.decMoving = False
+        self.tracking = False  # Tracking indicator
 
     @QtCore.pyqtSlot(str, name='moveMotorSignal')
     def start(self, set: str):
@@ -91,6 +93,12 @@ class Stepping(QtCore.QObject):
             string = set.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
             frq_ra = round(1.0/float(string[0])*1000.0)  # Convert to period given the frequency
             frq_dec = round(1.0/float(string[1])*1000.0)
+
+            try:
+                if string[4] == "TRK":
+                    self.tracking = True  # Indicate this is a tracking session
+            except IndexError:
+                self.tracking = False
 
             # Send the saved steps initially
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
@@ -109,6 +117,9 @@ class Stepping(QtCore.QObject):
                 self.motStepSig.emit("DECSTEPS", self.moveDecCount)
                 self.updtStepSig.emit(["BOTH", self.moveRaCount, self.moveDecCount])  # Send the total steps
                 self.motStopSig.emit()  # Notify the client that we stopped
+
+                if self.tracking is True:
+                    self.trackStatSig.emit("STOPPED")  # Indicate that any tracking has stopped
             else:
                 if not self.raMoving:
                     self.ra_step = int(string[2])  # Get the sent RA steps
@@ -123,6 +134,8 @@ class Stepping(QtCore.QObject):
                         self.timer_ra.setInterval(frq_ra)
                         self.timer_ra.start()
                         self.motStartSig.emit()
+                        if self.tracking is True:
+                            self.trackStatSig.emit("STARTED")  # Indicate that tracking has started
 
                 if not self.decMoving:
                     self.dec_step = int(string[3])  # Get the DEC steps
@@ -137,6 +150,8 @@ class Stepping(QtCore.QObject):
                         self.timer_dec.setInterval(frq_dec)
                         self.timer_dec.start()
                         self.motStartSig.emit()
+                        if self.tracking is True:
+                            self.trackStatSig.emit("STARTED")  # Indicate that tracking has started
 
     def move_ra_fwd(self):
         j = 0  # Initialize the local variable
@@ -159,6 +174,8 @@ class Stepping(QtCore.QObject):
             self.raMoving = False  # Indicate that the motor has now stopped
             if not self.decMoving:
                 self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
+                if self.tracking is True:
+                    self.trackStatSig.emit("STOPPED")  # Indicate that tracking has stopped
 
         if self.tempRaCount % 100 == 0 or self.tempRaCount >= self.ra_step:
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
@@ -185,6 +202,8 @@ class Stepping(QtCore.QObject):
             self.decMoving = False
             if not self.raMoving:
                 self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
+                if self.tracking is True:
+                    self.trackStatSig.emit("STOPPED")  # Indicate that tracking has stopped
 
         if self.tempDecCount % 100 == 0 or self.tempDecCount >= self.dec_step:
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)
@@ -211,6 +230,8 @@ class Stepping(QtCore.QObject):
             self.raMoving = False
             if not self.decMoving:
                 self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
+                if self.tracking is True:
+                    self.trackStatSig.emit("STOPPED")  # Indicate that tracking has stopped
 
         if self.tempRaCount % 100 == 0 or self.tempRaCount >= abs(self.ra_step):
             self.motStepSig.emit("RASTEPS", self.moveRaCount)
@@ -237,6 +258,8 @@ class Stepping(QtCore.QObject):
             self.decMoving = False
             if not self.raMoving:
                 self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
+                if self.tracking is True:
+                    self.trackStatSig.emit("STOPPED")  # Indicate that tracking has stopped
 
         if self.tempDecCount % 100 == 0 or self.tempDecCount >= abs(self.dec_step):
             self.motStepSig.emit("DECSTEPS", self.moveDecCount)

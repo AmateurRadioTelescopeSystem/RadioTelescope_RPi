@@ -25,6 +25,7 @@ class requestHandle(QtCore.QObject):
         # Keep the tracking speeds sent by the user
         self.trk_speed_ra = 0
         self.trk_speed_dec = 0
+        self.trk_time = 0.0  # Total tracking time in minutes
 
     def start(self):
         self.serverThread.start()
@@ -37,9 +38,10 @@ class requestHandle(QtCore.QObject):
         self.motorMove = motorDriver.Stepping(cur_stps[0], cur_stps[1])
         self.motorMove.motStepSig.connect(self.posObj.dataSend)
         self.motorMove.updtStepSig.connect(self.step_update)
-        self.motorMove.motStopSig.connect(partial(self.server.sendDataClient.emit, "STOPPED_MOVING"))
+        self.motorMove.motStopSig.connect(partial(self.server.sendDataClient.emit, "STOPPED_MOVING\n"))
         self.motorMove.motStopSig.connect(self.tracker)  # Send the tracking command if the user requested it
-        self.motorMove.motStartSig.connect(partial(self.server.sendDataClient.emit, "STARTED_MOVING"))
+        self.motorMove.motStartSig.connect(partial(self.server.sendDataClient.emit, "STARTED_MOVING\n"))
+        self.motorMove.trackStatSig.connect(self.tracking_status)  # Send the appropriate message to client
 
         self.server.clientDisconnected.connect(partial(self.motor.enabler, False))  # Disable motors
 
@@ -62,7 +64,7 @@ class requestHandle(QtCore.QObject):
             self.client.reConnectSigC.emit()  # Attempt a client reconnection since the server should be running
             response = "Client notified to start\n"
 
-        elif request == "START_SENDING_POS\n":
+        elif request == "START_SENDING_POS":
             self.positionThread.start()  # Start the position report thread
             response = "STARTED_SENDING_POS\n"
         elif request == "STOP_POS_SEND":
@@ -88,6 +90,11 @@ class requestHandle(QtCore.QObject):
                     self.motorMove.moveMotSig.emit("%s_%s_%d_%s" % (freq, freq, 0, step_dec))
                 elif splt_req[1] == "MOVE":
                     self.motorMove.moveMotSig.emit("%s_%s_%s_%s" % (freq, freq, step_ra, step_dec))
+
+                if int(step_ra) > int(step_dec):
+                    response = "MAX-STEPS-TO-DO_RA_%s" % step_ra
+                else:
+                    response = "MAX-STEPS-TO-DO_DEC_%s" % step_dec
             elif splt_req[1] == "STOP":
                 self.motorMove.moveMotSig.emit("-1_-1_0_0")  # Send a negative frequency to indicate stopping
 
@@ -152,6 +159,7 @@ class requestHandle(QtCore.QObject):
     @QtCore.pyqtSlot(name='motionStopNotifierSignal')
     def tracker(self):
         if self.tracking_command:
+            track_time = self.trk_time*60  # Total tracking time in seconds
             # Individual motor stepping frequencies
             if (self.trk_speed_ra == 0.0) and (self.trk_speed_dec == 0.0):
                 freq1 = freq2 = 12  # Set a stellar tracking speed
@@ -161,11 +169,18 @@ class requestHandle(QtCore.QObject):
                 freq1 = 12 + self.trk_speed_ra*num_of_stp_per_deg_ra
                 freq2 = self.trk_speed_dec*num_of_stp_per_deg_dec
 
-                ra_steps = 345600  # Enough steps to track for 8 hours
-                dec_steps = 345600  # Enough steps for 8 hours of tracking
+                ra_steps = track_time*freq1  # Calculate the necessary step number
+                dec_steps = track_time*freq2  # Calculate the necessary step number
 
             self.tracking_command = False  # Reset tracking command
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq1, freq2, int(ra_steps), int(dec_steps)))
+
+    @QtCore.pyqtSlot(str, name='trackingStatusSignal')
+    def tracking_status(self, status: str):
+        if status == "STOPPED":
+            self.server.sendDataClient.emit("TRACKING_STOPPED\n")
+        elif status == "STARTED":
+            self.server.sendDataClient.emit("TRACKING_STARTED\n")
 
     @QtCore.pyqtSlot(list, name='updateSteps')
     def step_update(self, data: list):
