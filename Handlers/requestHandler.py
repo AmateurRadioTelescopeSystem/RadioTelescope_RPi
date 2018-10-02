@@ -151,6 +151,7 @@ class requestHandle(QtCore.QObject):
 
             self.trk_speed_ra = float(splt_req[6])
             self.trk_speed_dec = float(splt_req[8])
+            self.trk_time = float(splt_req[10])  # Get the total tracking time requested
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
             self.tracking_command = True  # Enable the tracking command, so on motor stop the tracking is triggered
 
