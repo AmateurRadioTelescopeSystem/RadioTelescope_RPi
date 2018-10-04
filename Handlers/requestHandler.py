@@ -33,8 +33,7 @@ class requestHandle(QtCore.QObject):
         self.trk_time = 0.0  # Total tracking time in minutes
 
         # Stores the scanning parameters in a named tuple
-        self.Scan_Parameters = namedtuple('Scan_Parameters', 'Point1 Point2 Point3 Point4 StepSize Direction MotSpeeds '
-                                                             'IntTime')
+        self.Scan_Parameters = namedtuple('Scan_Parameters', 'Point1 MotSpeeds IntTime')
         self.scan_params = ()  # Save the scanning parameters in a tuple
         self.scanning_map = ()  # Tuple to save the map points
 
@@ -167,7 +166,7 @@ class requestHandle(QtCore.QObject):
             self.trk_time = float(splt_req[10])  # Get the total tracking time requested
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
             self.tracking_command = True  # Enable the tracking command, so on motor stop the tracking is triggered
-        elif splt_req[0] == "SKYSCAN":
+        elif splt_req[0] == "SKY-SCAN":
             # Store the scanning parameters in a named tuple. Format:
             '''
             Two dimensions:
@@ -182,10 +181,8 @@ class requestHandle(QtCore.QObject):
             a[5] = Direction_of_scanning
             a[7] = Integration_time
             '''
-            self.scan_params = self.Scan_Parameters((splt_req[2], splt_req[7]), (splt_req[3], splt_req[8]),
-                                                    (splt_req[4], splt_req[9]), (splt_req[5], splt_req[10]),
-                                                    (splt_req[12], splt_req[13]), splt_req[15],
-                                                    (splt_req[17], splt_req[19]), splt_req[21], )
+            self.scan_params = self.Scan_Parameters((splt_req[2], splt_req[4]), (splt_req[6], splt_req[8]),
+                                                    splt_req[10], )
 
             # Transit to position first, before sky scanning
             freq = 200.0  # Set the maximum frequency
@@ -230,7 +227,7 @@ class requestHandle(QtCore.QObject):
                     ra_steps = freq1 * track_time
                     dec_steps = 0
                 else:
-                    freq1 = 12 + self.scan_params.MotSpeed[0]
+                    freq1 = 12 + self.scan_params.MotSpeeds[0]
                     freq2 = self.scan_params.MotSpeeds[1]
 
                     ra_steps = track_time * freq1
