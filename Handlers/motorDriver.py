@@ -65,6 +65,7 @@ class Stepping(QtCore.QObject):
     motStepSig = QtCore.pyqtSignal(str, int, name='motorStepCount')  # Triggered when step count is sent
     updtStepSig = QtCore.pyqtSignal(list, name='updateSteps')  # Update the steps signal
     motStopSig = QtCore.pyqtSignal(name='motionStopNotifierSignal')  # Signal is emitted when the motors stop
+    motHaltSig = QtCore.pyqtSignal(name='motionHaltNotifierSignal')  # Signal is emitted when motor stop is requested
     motStartSig = QtCore.pyqtSignal(name='motionStartNotifierSignal')  # Signal is emitted upon motor start up
     trackStatSig = QtCore.pyqtSignal(str, name='trackingStatusSignal')  # Send the tracking status
 
@@ -116,7 +117,7 @@ class Stepping(QtCore.QObject):
                 self.motStepSig.emit("RASTEPS", self.moveRaCount)  # Send the necessary step updates on stop
                 self.motStepSig.emit("DECSTEPS", self.moveDecCount)
                 self.updtStepSig.emit(["BOTH", self.moveRaCount, self.moveDecCount])  # Send the total steps
-                self.motStopSig.emit()  # Notify the client that we stopped
+                self.motHaltSig.emit()  # Notify the client that we stopped
 
                 if self.tracking is True:
                     self.trackStatSig.emit("STOPPED")  # Indicate that any tracking has stopped

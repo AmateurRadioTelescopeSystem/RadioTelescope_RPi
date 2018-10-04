@@ -1,5 +1,6 @@
 from PyQt5 import QtCore
 from functools import partial
+from collections import namedtuple
 from Handlers import motorDriver
 import logging
 import sys
@@ -20,12 +21,22 @@ class requestHandle(QtCore.QObject):
         self.serverThread = servThread
         self.clientThread = clientThread
         self.posObj = posObj  # Dish position object
+
         self.tracking_command = False  # Indicator if we need tracking or not
+        self.sky_scanning_command = False  # Sky scanning indicator
+        self.integrate = False  # Sky scanning integration indicator
+        self.point_count = 0  # Count the current point number in the sky scanner
 
         # Keep the tracking speeds sent by the user
         self.trk_speed_ra = 0
         self.trk_speed_dec = 0
         self.trk_time = 0.0  # Total tracking time in minutes
+
+        # Stores the scanning parameters in a named tuple
+        self.Scan_Parameters = namedtuple('Scan_Parameters', 'Point1 Point2 Point3 Point4 StepSize Direction MotSpeeds '
+                                                             'IntTime')
+        self.scan_params = ()  # Save the scanning parameters in a tuple
+        self.scanning_map = ()  # Tuple to save the map points
 
     def start(self):
         self.serverThread.start()
@@ -38,8 +49,10 @@ class requestHandle(QtCore.QObject):
         self.motorMove = motorDriver.Stepping(cur_stps[0], cur_stps[1])
         self.motorMove.motStepSig.connect(self.posObj.dataSend)
         self.motorMove.updtStepSig.connect(self.step_update)
-        self.motorMove.motStopSig.connect(partial(self.server.sendDataClient.emit, "STOPPED_MOVING\n"))
+        self.motorMove.motHaltSig.connect(partial(self.server.sendDataClient.emit, "STOPPED_MOVING\n"))
+        self.motorMove.motHaltSig.connect(self.action_reseter)  # Reset the tracking and scanning indicators on halt
         self.motorMove.motStopSig.connect(self.tracker)  # Send the tracking command if the user requested it
+        self.motorMove.motStopSig.connect(self.sky_scanner)  # Act appropriately when motors are stopped
         self.motorMove.motStartSig.connect(partial(self.server.sendDataClient.emit, "STARTED_MOVING\n"))
         self.motorMove.trackStatSig.connect(self.tracking_status)  # Send the appropriate message to client
 
@@ -154,6 +167,37 @@ class requestHandle(QtCore.QObject):
             self.trk_time = float(splt_req[10])  # Get the total tracking time requested
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
             self.tracking_command = True  # Enable the tracking command, so on motor stop the tracking is triggered
+        elif splt_req[0] == "SKYSCAN":
+            # Store the scanning parameters in a named tuple. Format:
+            '''
+            Two dimensions:
+            a[0] = RA1 and DEC1
+            a[1] = RA2 and DEC2
+            a[2] = RA3 and DEC3
+            a[3] = RA4 and DEC4
+            a[4] = Step_size RA and DEC
+            a[6] = RA_speed and DEC_speed
+            
+            One dimension:
+            a[5] = Direction_of_scanning
+            a[7] = Integration_time
+            '''
+            self.scan_params = self.Scan_Parameters((splt_req[2], splt_req[7]), (splt_req[3], splt_req[8]),
+                                                    (splt_req[4], splt_req[9]), (splt_req[5], splt_req[10]),
+                                                    (splt_req[12], splt_req[13]), splt_req[15],
+                                                    (splt_req[17], splt_req[19]), splt_req[21], )
+
+            # Transit to position first, before sky scanning
+            freq = 200.0  # Set the maximum frequency
+            cur_stps = self.cfg_data.getSteps()  # Read the current steps from home to compensate for it
+            ra_steps = float(self.scan_params.Point1[0]) * motorDriver.ra_steps_per_deg - float(cur_stps[0])
+            dec_steps = float(self.scan_params.Point1[1]) * motorDriver.dec_steps_per_deg - float(cur_stps[1])
+
+            self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
+            self.sky_scanning_command = True  # Enable the sky scanning command
+        elif splt_req[0] == "SKY-SCAN-MAP":
+            for i in range(1, len(splt_req) - 1, 2):
+                self.scanning_map += ((splt_req[i], splt_req[i + 1]), )
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 
@@ -167,14 +211,48 @@ class requestHandle(QtCore.QObject):
                 ra_steps = 345600  # Enough steps to track for 8 hours
                 dec_steps = 0  # Declination is not changing is stellar objects, so we do not move this motor
             else:
-                freq1 = 12 + self.trk_speed_ra*num_of_stp_per_deg_ra
-                freq2 = self.trk_speed_dec*num_of_stp_per_deg_dec
+                freq1 = 12 + self.trk_speed_ra * num_of_stp_per_deg_ra
+                freq2 = self.trk_speed_dec * num_of_stp_per_deg_dec
 
-                ra_steps = track_time*freq1  # Calculate the necessary step number
-                dec_steps = track_time*freq2  # Calculate the necessary step number
+                ra_steps = track_time * freq1  # Calculate the necessary step number
+                dec_steps = track_time * freq2  # Calculate the necessary step number
 
             self.tracking_command = False  # Reset tracking command
             self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq1, freq2, int(ra_steps), int(dec_steps)))
+
+    @QtCore.pyqtSlot(name='motionStopNotifierSignal')
+    def sky_scanner(self):
+        if self.sky_scanning_command:
+            if self.integrate is True:
+                track_time = float(self.scan_params.IntTime) * 60.0
+                if (self.scan_params.MotSpeeds[0] == 0.0) and (self.scan_params.MotSpeeds[1] == 0.0):
+                    freq1 = freq2 = 12
+                    ra_steps = freq1 * track_time
+                    dec_steps = 0
+                else:
+                    freq1 = 12 + self.scan_params.MotSpeed[0]
+                    freq2 = self.scan_params.MotSpeeds[1]
+
+                    ra_steps = track_time * freq1
+                    dec_steps = track_time * freq2
+                self.integrate = False  # Get out of integration next time
+                self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq1, freq2, int(ra_steps), int(dec_steps)))
+            else:
+                if not (self.point_count > len(self.scanning_map)):
+                    cur_stps = self.cfg_data.getSteps()  # Read the current steps from home to compensate for it
+                    ra_steps = float(self.scanning_map[self.point_count][0]) * motorDriver.ra_steps_per_deg - \
+                               float(cur_stps[0])
+                    dec_steps = float(self.scanning_map[self.point_count][1]) * motorDriver.dec_steps_per_deg - \
+                                float(cur_stps[1])
+                    self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (200.0, 200.0, int(ra_steps), int(dec_steps)))
+                    self.point_count += 1  # Increment the point count
+
+                    if float(self.scan_params.IntTime) > 0:
+                        self.integrate = True  # Indicate that integration is requested
+                else:
+                    self.point_count = 0
+                    self.scanning_map = ()  # Reset the tuple
+                    self.sky_scanning_command = False  # Indicate that scanning is done
 
     @QtCore.pyqtSlot(str, name='trackingStatusSignal')
     def tracking_status(self, status: str):
@@ -186,3 +264,9 @@ class requestHandle(QtCore.QObject):
     @QtCore.pyqtSlot(list, name='updateSteps')
     def step_update(self, data: list):
         self.cfg_data.setSteps(data)
+
+    @QtCore.pyqtSlot(name='motionHaltNotifierSignal')
+    def action_reseter(self):
+        self.tracking_command = False
+        self.sky_scanning_command = False
+        self.integrate = False
