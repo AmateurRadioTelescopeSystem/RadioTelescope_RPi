@@ -1,0 +1,4 @@
+image: balenalib/raspberrypi3-debian-python
+
+before_script:
+  - python -V
