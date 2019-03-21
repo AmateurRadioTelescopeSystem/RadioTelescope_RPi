@@ -21,6 +21,7 @@ class CustomLogHandler(logging.Handler):
     to log to the same file by using a queue.
 
     """
+
     def __init__(self, filename, when, backup_count, enc, utc):
         """
         Class constructor to make the necessary initializations.
@@ -66,8 +67,8 @@ class CustomLogHandler(logging.Handler):
 
         :return: Nothing
         """
-        self._handler = logging.handlers.TimedRotatingFileHandler\
-            (self.fname, self.when, backupCount=self.backup_count, encoding=self.encoding, utc=self.utc)
+        self._handler = logging.handlers.TimedRotatingFileHandler(self.fname, self.when, backupCount=self.backup_count,
+                                                                  encoding=self.encoding, utc=self.utc)
         logging.Handler.setFormatter(self, self.fmt)
         self._handler.setFormatter(self.fmt)
         self._handler.rotator = self.compressor  # Compress the old file in every rotation
@@ -79,14 +80,14 @@ class CustomLogHandler(logging.Handler):
                     record.msg = record.msg % record.args
                     record.args = None
                 if record.exc_info:
-                    dummy = self.format(record)
+                    # dummy = self.format(record) todo: Define if this has existential meaning
                     record.exc_info = None
                 self._handler.emit(record)  # Write to log file
             except (KeyboardInterrupt, SystemExit):
                 raise
             except EOFError:
                 break
-            except:
+            except:  # noqa
                 traceback.print_exc(file=sys.stderr)
 
     def send(self, s):
@@ -110,7 +111,7 @@ class CustomLogHandler(logging.Handler):
             self.send(record)
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except:  # noqa
             self.handleError(record)
 
     def close(self):
@@ -138,7 +139,7 @@ class CustomLogHandler(logging.Handler):
             compressed = gzip.compress(data, 9)  # Get the compressed binary data
             with open(dest, "wb") as dest_file:
                 dest_file.write(compressed)  # Save the compressed data to file
-        os.remove(source) # Remove uncompressed file
+        os.remove(source)  # Remove uncompressed file
 
     def namer(self, name):
         """

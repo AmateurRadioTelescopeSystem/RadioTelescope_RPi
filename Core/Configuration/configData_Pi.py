@@ -1,6 +1,5 @@
 import xml.etree.ElementTree as etree
 import logging
-import os
 
 
 class confDataPi(object):
@@ -22,7 +21,7 @@ class confDataPi(object):
         try:
             self.tree = etree.parse(self.filename)
             self.root = self.tree.getroot()
-        except:
+        except Exception:
             self.log_data.exception(
                 "An exception occurred trying parse the XML settings file. See the traceback below.")
             exit(1)  # Exit the program since the settings file is important

@@ -97,7 +97,7 @@ class requestHandle(QtCore.QObject):
                 step_dec = splt_req[4]
                 if splt_req[1] == "MOVRA":
                     # TODO make the string more intuitive by including field names
-                    self.motorMove.moveMotSig.emit("%s_%s_%s_%d" %(freq, freq, step_ra, 0))
+                    self.motorMove.moveMotSig.emit("%s_%s_%s_%d" % (freq, freq, step_ra, 0))
                 elif splt_req[1] == "MOVDEC":
                     self.motorMove.moveMotSig.emit("%s_%s_%d_%s" % (freq, freq, 0, step_dec))
                 elif splt_req[1] == "MOVE":
@@ -176,7 +176,7 @@ class requestHandle(QtCore.QObject):
             a[3] = RA4 and DEC4
             a[4] = Step_size RA and DEC
             a[6] = RA_speed and DEC_speed
-            
+
             One dimension:
             a[5] = Direction_of_scanning
             a[7] = Integration_time
@@ -194,14 +194,14 @@ class requestHandle(QtCore.QObject):
             self.sky_scanning_command = True  # Enable the sky scanning command
         elif splt_req[0] == "SKY-SCAN-MAP":
             for i in range(1, len(splt_req) - 1, 2):
-                self.scanning_map += ((splt_req[i], splt_req[i + 1]), )
+                self.scanning_map += ((splt_req[i], splt_req[i + 1]),)
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 
     @QtCore.pyqtSlot(name='motionStopNotifierSignal')
     def tracker(self):
         if self.tracking_command:
-            track_time = self.trk_time*60  # Total tracking time in seconds
+            track_time = self.trk_time * 60  # Total tracking time in seconds
             # Individual motor stepping frequencies
             if (self.trk_speed_ra == 0.0) and (self.trk_speed_dec == 0.0):
                 freq1 = freq2 = 12  # Set a stellar tracking speed
@@ -237,10 +237,10 @@ class requestHandle(QtCore.QObject):
             else:
                 if not (self.point_count > len(self.scanning_map)):
                     cur_stps = self.cfg_data.getSteps()  # Read the current steps from home to compensate for it
-                    ra_steps = float(self.scanning_map[self.point_count][0]) * motorDriver.ra_steps_per_deg - \
-                               float(cur_stps[0])
-                    dec_steps = float(self.scanning_map[self.point_count][1]) * motorDriver.dec_steps_per_deg - \
-                                float(cur_stps[1])
+                    ra_steps = float(self.scanning_map[self.point_count][0]) * motorDriver.ra_steps_per_deg - float(
+                        cur_stps[0])
+                    dec_steps = float(self.scanning_map[self.point_count][1]) * motorDriver.dec_steps_per_deg - float(
+                        cur_stps[1])
                     self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (200.0, 200.0, int(ra_steps), int(dec_steps)))
                     self.point_count += 1  # Increment the point count
 
