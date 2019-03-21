@@ -1,7 +1,7 @@
 from PyQt5 import QtCore
 from functools import partial
 from collections import namedtuple
-from Handlers import motorDriver
+from Core.Handlers import motorDriver
 import logging
 import sys
 

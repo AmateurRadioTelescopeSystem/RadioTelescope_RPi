@@ -1,14 +1,16 @@
 #!/usr/bin/env python3.5
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath('.'))  # noqa
+
 # Import the required libraries and classes
 from PyQt5 import QtCore
 import logging.config
-import sys
-import os
 from Position import DishPosition
-from Handlers import requestHandler
-from Networking import TCPClient, TCPServer
-from Configuration import defaultData, configData_Pi
+from Core.Handlers import requestHandler
+from Core.Networking import TCPServer, TCPClient
+from Core.Configuration import configData_Pi, defaultData
 
 # TODO Test the functionality of the server and client
 # TODO make the app "exitable" so killing is not required for termination
