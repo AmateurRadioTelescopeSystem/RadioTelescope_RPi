@@ -11,5 +11,6 @@ test:
   stage: build
   script:
     - python3 -V
-    - python3 -m pip install RPi.GPIO
-    - pwd
+    - python3 -m pip install RPi.GPIO sphinx
+    - python3 -m pip install -r requirements
+    - sphinx-build docs/source build
