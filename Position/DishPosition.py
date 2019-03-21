@@ -13,7 +13,7 @@ class Position(QtCore.QObject):
         self.dec = 0
 
         # Initialize the steps upon the creation of this class
-        steps = cfg_data.getSteps()
+        steps = cfg_data.get_steps()
         self.ra_step_number = steps[0]
         self.dec_step_number = steps[1]
 
@@ -61,7 +61,7 @@ class Position(QtCore.QObject):
         pitch = math.atan2(-acc[0], math.sqrt(acc[1]*acc[1] + acc[2]*acc[2]))  # Calculate pitch
         return [math.degrees(pitch), math.degrees(roll)]  # Roll is the declination and pitch is the hour angle
         '''
-        stps = self.cfg.getSteps()
+        stps = self.cfg.get_steps()
         ha = float(stps[0])/43200.0
         dec = float(stps[1])/10000.0
         

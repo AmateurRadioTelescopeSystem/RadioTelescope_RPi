@@ -8,16 +8,16 @@ class TCPClient(QtCore.QObject):
     sendData = QtCore.pyqtSignal(str, name='sendDataClient')  # Data to be sent to the server
     reConnectSigC = QtCore.pyqtSignal(name='reConnectClient')  # A reconnection signal originating from a button press
 
-    def __init__(self, cfgData, parent=None):
+    def __init__(self, cfg_data, parent=None):
         """Initialize the class by providing the configuration data object as returned by the
         :meth:`configData_Pi.confDataPi.parse`.
 
         Args:
-            cfgData: Configuration data object
+            cfg_data: Configuration data object
             parent: Parent class to inherit from, if any
         """
         super(TCPClient, self).__init__(parent)  # Get the parent of the class
-        self.cfgData = cfgData  # Create a variable for the cfg file
+        self.cfg_data = cfg_data  # Create a variable for the cfg file
 
     def start(self):
         self.log_data = logging.getLogger(__name__)  # Create the logger
@@ -30,12 +30,12 @@ class TCPClient(QtCore.QObject):
     def connect(self):
         if self.sock.state() != QtNetwork.QAbstractSocket.ConnectedState:
             # Get the host and port from the settings file for the client connection
-            host = self.cfgData.getClientHost()
-            port = self.cfgData.getClientPort()
+            host = self.cfg_data.get_client_host()
+            port = self.cfg_data.get_client_port()
 
             self.sock = QtNetwork.QTcpSocket()  # Create the TCP socket
             self.sock.readyRead.connect(self._receive)  # Data que signal
-            self.sock.connected.connect(self._hostConnected)  # What to do when we have connected
+            self.sock.connected.connect(self._host_connected)  # What to do when we have connected
             self.sock.error.connect(self._error)  # Log any error occurred and also perform the necessary actions
             self.sock.disconnected.connect(self._disconnected)  # If there is state change then call the function
 
@@ -44,7 +44,7 @@ class TCPClient(QtCore.QObject):
             self.sock.waitForConnected(msecs=1000)  # Wait a until connected (the function is waiting for 1 sec)
 
     @QtCore.pyqtSlot(str, name='sendDataClient')
-    def sendD(self, data: str):
+    def send_data(self, data: str):
         if self.sock.state() == QtNetwork.QAbstractSocket.ConnectedState:
             self.sock.write(data.encode('utf-8'))
             self.sock.waitForBytesWritten()
@@ -59,8 +59,8 @@ class TCPClient(QtCore.QObject):
         self.sendData.disconnect()
         self.sock.waitForConnected(msecs=1000)
 
-    def _hostConnected(self):
-        self.sendData.connect(self.sendD)  # Send the data to the server when this signal is fired
+    def _host_connected(self):
+        self.sendData.connect(self.send_data)  # Send the data to the server when this signal is fired
 
     def _error(self):
         self.log_data.warning("Some error occurred in client: %s" % self.sock.errorString())

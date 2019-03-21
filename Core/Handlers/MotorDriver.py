@@ -1,7 +1,7 @@
 from PyQt5 import QtCore
 import RPi.GPIO as GPIO
 
-_steps_half = [[1, 0], [1, 1], [0, 1], [0, 0]]
+HALF_STEPS_ARRAY = [[1, 0], [1, 1], [0, 1], [0, 0]]
 
 # Set the pin numbers where the output is going to be
 _RA1_PIN = 11
@@ -11,17 +11,17 @@ _DEC2_PIN = 16
 _MOTORS_ENABLE_PIN = 7
 
 # TODO add the values to the settings file and retrieve them when needed. This will be done to avoid problems
-ra_steps_per_deg = 43200.0 / 15.0
-dec_steps_per_deg = 10000
+RA_STEPS_PER_DEGREE = 43200.0 / 15.0
+DEC_STEPS_PER_DEGREE = 10000
 
 
 class MotorInit(QtCore.QObject):
     def __init__(self, parent=None):
         super(MotorInit, self).__init__(parent)
-        # self.GPIO_Init()  # Initialize the GPIO pins
+        # self.gpio_init()  # Initialize the GPIO pins
 
     # TODO see how the initialization and setting will be implemented for the GPIO (partially complete)
-    def GPIO_Init(self):
+    def gpio_init(self):
         # Set the pin numbering mode
         GPIO.setmode(GPIO.BOARD)
 
@@ -39,16 +39,16 @@ class MotorInit(QtCore.QObject):
         GPIO.output(_DEC2_PIN, 0)
         GPIO.output(_MOTORS_ENABLE_PIN, 1)  # Set to HIGH as needed by the switch
 
-    def clean_IO(self):
+    def clean_io(self):
         GPIO.cleanup()
 
-    def setStep(self, c1, c2, RA_motor):
-        if RA_motor:  # If RA_motor is True, then we are talking about the RA motor
-            GPIO.output(_RA1_PIN, c1)
-            GPIO.output(_RA2_PIN, c2)
+    def set_step(self, c_1, c_2, ra_motor):
+        if ra_motor:  # If RA_motor is True, then we are talking about the RA motor
+            GPIO.output(_RA1_PIN, c_1)
+            GPIO.output(_RA2_PIN, c_2)
         else:
-            GPIO.output(_DEC1_PIN, c1)
-            GPIO.output(_DEC2_PIN, c2)
+            GPIO.output(_DEC1_PIN, c_1)
+            GPIO.output(_DEC2_PIN, c_2)
 
     def enabler(self, enable: bool):
         if enable:
@@ -75,17 +75,17 @@ class Stepping(QtCore.QObject):
         self.motor = MotorInit()
 
         # Initialize all the counter variables
-        self.moveRaCount = 0 + int(init_ra)
-        self.moveDecCount = 0 + int(init_dec)
-        self.tempRaCount = 0
-        self.tempDecCount = 0
+        self.move_ra_count = 0 + int(init_ra)
+        self.move_dec_count = 0 + int(init_dec)
+        self.temp_ra_count = 0
+        self.temp_dec_count = 0
         self.ra_step = 0
         self.dec_step = 0
 
         self.timer_ra = None
         self.timer_dec = None
-        self.raMoving = False
-        self.decMoving = False
+        self.ra_moving = False
+        self.dec_moving = False
         self.tracking = False  # Tracking indicator
 
     @QtCore.pyqtSlot(str, name='moveMotorSignal')
@@ -102,27 +102,27 @@ class Stepping(QtCore.QObject):
                 self.tracking = False
 
             # Send the saved steps initially
-            self.motStepSig.emit("RASTEPS", self.moveRaCount)
-            self.motStepSig.emit("DECSTEPS", self.moveDecCount)
+            self.motStepSig.emit("RASTEPS", self.move_ra_count)
+            self.motStepSig.emit("DECSTEPS", self.move_dec_count)
 
             if frq_ra < 0.0 or frq_dec < 0.0:
                 if self.timer_ra is not None:
                     self.timer_ra.stop()
-                    self.tempRaCount = 0
-                    self.raMoving = False
+                    self.temp_ra_count = 0
+                    self.ra_moving = False
                 if self.timer_dec is not None:
                     self.timer_dec.stop()
-                    self.tempDecCount = 0
-                    self.decMoving = False
-                self.motStepSig.emit("RASTEPS", self.moveRaCount)  # Send the necessary step updates on stop
-                self.motStepSig.emit("DECSTEPS", self.moveDecCount)
-                self.updtStepSig.emit(["BOTH", self.moveRaCount, self.moveDecCount])  # Send the total steps
+                    self.temp_dec_count = 0
+                    self.dec_moving = False
+                self.motStepSig.emit("RASTEPS", self.move_ra_count)  # Send the necessary step updates on stop
+                self.motStepSig.emit("DECSTEPS", self.move_dec_count)
+                self.updtStepSig.emit(["BOTH", self.move_ra_count, self.move_dec_count])  # Send the total steps
                 self.motHaltSig.emit()  # Notify the client that we stopped
 
                 if self.tracking is True:
                     self.trackStatSig.emit("STOPPED")  # Indicate that any tracking has stopped
             else:
-                if not self.raMoving:
+                if not self.ra_moving:
                     self.ra_step = int(string[2])  # Get the sent RA steps
                     self.timer_ra = QtCore.QTimer()  # Create the Qt timer object
                     if self.ra_step > 0:  # Forward direction
@@ -131,14 +131,14 @@ class Stepping(QtCore.QObject):
                         self.timer_ra.timeout.connect(self.move_ra_back)
 
                     if self.ra_step != 0:
-                        self.raMoving = True  # Indicate that the motor is moving
+                        self.ra_moving = True  # Indicate that the motor is moving
                         self.timer_ra.setInterval(frq_ra)
                         self.timer_ra.start()
                         self.motStartSig.emit()
                         if self.tracking is True:
                             self.trackStatSig.emit("STARTED")  # Indicate that tracking has started
 
-                if not self.decMoving:
+                if not self.dec_moving:
                     self.dec_step = int(string[3])  # Get the DEC steps
                     self.timer_dec = QtCore.QTimer()
                     if self.dec_step > 0:
@@ -147,7 +147,7 @@ class Stepping(QtCore.QObject):
                         self.timer_dec.timeout.connect(self.move_dec_back)
 
                     if self.dec_step != 0:
-                        self.decMoving = True
+                        self.dec_moving = True
                         self.timer_dec.setInterval(frq_dec)
                         self.timer_dec.start()
                         self.motStartSig.emit()
@@ -164,23 +164,23 @@ class Stepping(QtCore.QObject):
             j = 1
         elif not GPIO.input(_RA1_PIN) and GPIO.input(_RA2_PIN):
             j = 3
-        self.motor.setStep(_steps_half[j][0], _steps_half[j][1], True)
-        self.moveRaCount = self.moveRaCount + 1  # Hold the total step count
-        self.tempRaCount = self.tempRaCount + 1  # Temporary step count to know when to stop
+        self.motor.set_step(HALF_STEPS_ARRAY[j][0], HALF_STEPS_ARRAY[j][1], True)
+        self.move_ra_count = self.move_ra_count + 1  # Hold the total step count
+        self.temp_ra_count = self.temp_ra_count + 1  # Temporary step count to know when to stop
 
-        if self.tempRaCount >= self.ra_step:
+        if self.temp_ra_count >= self.ra_step:
             self.timer_ra.stop()  # Stop the timer
             self.timer_ra.timeout.disconnect()  # Disconnect any signals
-            self.tempRaCount = 0  # Reset the temporary step count
-            self.raMoving = False  # Indicate that the motor has now stopped
-            if not self.decMoving:
+            self.temp_ra_count = 0  # Reset the temporary step count
+            self.ra_moving = False  # Indicate that the motor has now stopped
+            if not self.dec_moving:
                 self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
                 if self.tracking is True:
                     self.trackStatSig.emit("STOPPED")  # Indicate that tracking has stopped
 
-        if self.tempRaCount % 100 == 0 or self.tempRaCount >= self.ra_step:
-            self.motStepSig.emit("RASTEPS", self.moveRaCount)
-            self.updtStepSig.emit(["RA", self.moveRaCount, "0"])
+        if self.temp_ra_count % 100 == 0 or self.temp_ra_count >= self.ra_step:
+            self.motStepSig.emit("RASTEPS", self.move_ra_count)
+            self.updtStepSig.emit(["RA", self.move_ra_count, "0"])
 
     def move_dec_fwd(self):
         j = 0
@@ -192,23 +192,23 @@ class Stepping(QtCore.QObject):
             j = 1
         elif not GPIO.input(_DEC1_PIN) and GPIO.input(_DEC2_PIN):
             j = 3
-        self.motor.setStep(_steps_half[j][0], _steps_half[j][1], False)
-        self.moveDecCount = self.moveDecCount + 1
-        self.tempDecCount = self.tempDecCount + 1
+        self.motor.set_step(HALF_STEPS_ARRAY[j][0], HALF_STEPS_ARRAY[j][1], False)
+        self.move_dec_count = self.move_dec_count + 1
+        self.temp_dec_count = self.temp_dec_count + 1
 
-        if self.tempDecCount >= self.dec_step:
+        if self.temp_dec_count >= self.dec_step:
             self.timer_dec.stop()
             self.timer_dec.timeout.disconnect()
-            self.tempDecCount = 0
-            self.decMoving = False
-            if not self.raMoving:
+            self.temp_dec_count = 0
+            self.dec_moving = False
+            if not self.ra_moving:
                 self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
                 if self.tracking is True:
                     self.trackStatSig.emit("STOPPED")  # Indicate that tracking has stopped
 
-        if self.tempDecCount % 100 == 0 or self.tempDecCount >= self.dec_step:
-            self.motStepSig.emit("DECSTEPS", self.moveDecCount)
-            self.updtStepSig.emit(["DEC", "0", self.moveDecCount])
+        if self.temp_dec_count % 100 == 0 or self.temp_dec_count >= self.dec_step:
+            self.motStepSig.emit("DECSTEPS", self.move_dec_count)
+            self.updtStepSig.emit(["DEC", "0", self.move_dec_count])
 
     def move_ra_back(self):
         j = 0
@@ -220,23 +220,23 @@ class Stepping(QtCore.QObject):
             j = 3
         elif not GPIO.input(_RA1_PIN) and GPIO.input(_RA2_PIN):
             j = 1
-        self.motor.setStep(_steps_half[j][0], _steps_half[j][1], True)
-        self.moveRaCount = self.moveRaCount - 1
-        self.tempRaCount = self.tempRaCount + 1
+        self.motor.set_step(HALF_STEPS_ARRAY[j][0], HALF_STEPS_ARRAY[j][1], True)
+        self.move_ra_count = self.move_ra_count - 1
+        self.temp_ra_count = self.temp_ra_count + 1
 
-        if self.tempRaCount >= abs(self.ra_step):
+        if self.temp_ra_count >= abs(self.ra_step):
             self.timer_ra.stop()
             self.timer_ra.timeout.disconnect()
-            self.tempRaCount = 0
-            self.raMoving = False
-            if not self.decMoving:
+            self.temp_ra_count = 0
+            self.ra_moving = False
+            if not self.dec_moving:
                 self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
                 if self.tracking is True:
                     self.trackStatSig.emit("STOPPED")  # Indicate that tracking has stopped
 
-        if self.tempRaCount % 100 == 0 or self.tempRaCount >= abs(self.ra_step):
-            self.motStepSig.emit("RASTEPS", self.moveRaCount)
-            self.updtStepSig.emit(["RA", self.moveRaCount, "0"])
+        if self.temp_ra_count % 100 == 0 or self.temp_ra_count >= abs(self.ra_step):
+            self.motStepSig.emit("RASTEPS", self.move_ra_count)
+            self.updtStepSig.emit(["RA", self.move_ra_count, "0"])
 
     def move_dec_back(self):
         j = 0
@@ -248,20 +248,20 @@ class Stepping(QtCore.QObject):
             j = 3
         elif not GPIO.input(_DEC1_PIN) and GPIO.input(_DEC2_PIN):
             j = 1
-        self.motor.setStep(_steps_half[j][0], _steps_half[j][1], False)
-        self.moveDecCount = self.moveDecCount - 1
-        self.tempDecCount = self.tempDecCount + 1
+        self.motor.set_step(HALF_STEPS_ARRAY[j][0], HALF_STEPS_ARRAY[j][1], False)
+        self.move_dec_count = self.move_dec_count - 1
+        self.temp_dec_count = self.temp_dec_count + 1
 
-        if self.tempDecCount >= abs(self.dec_step):
+        if self.temp_dec_count >= abs(self.dec_step):
             self.timer_dec.stop()
             self.timer_dec.timeout.disconnect()
-            self.tempDecCount = 0
-            self.decMoving = False
-            if not self.raMoving:
+            self.temp_dec_count = 0
+            self.dec_moving = False
+            if not self.ra_moving:
                 self.motStopSig.emit()  # Notify for stopping, if both motors have stopped
                 if self.tracking is True:
                     self.trackStatSig.emit("STOPPED")  # Indicate that tracking has stopped
 
-        if self.tempDecCount % 100 == 0 or self.tempDecCount >= abs(self.dec_step):
-            self.motStepSig.emit("DECSTEPS", self.moveDecCount)
-            self.updtStepSig.emit(["DEC", "0", self.moveDecCount])
+        if self.temp_dec_count % 100 == 0 or self.temp_dec_count >= abs(self.dec_step):
+            self.motStepSig.emit("DECSTEPS", self.move_dec_count)
+            self.updtStepSig.emit(["DEC", "0", self.move_dec_count])

@@ -1,6 +1,6 @@
 # Strings of the default file settings are included here
 
-log_config_str = """[loggers]
+LOG_CONFIG_STR = """[loggers]
 keys=root
 
 [handlers]
@@ -49,7 +49,7 @@ format=%(asctime)s  [%(thread)12d] %(levelname)-8s - %(name)30s.%(funcName)-20s 
 format=%(levelname)-8s [%(thread)d] - %(name)30s.%(funcName)-20s - %(message)s
 """
 
-settings_xml_str = """<settings>
+SETTINGS_XML_STR = """<settings>
     <TCPServer>
         <host>remote</host>
         <port>10001</port>

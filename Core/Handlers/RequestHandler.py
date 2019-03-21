@@ -3,24 +3,24 @@ import logging
 from functools import partial
 from collections import namedtuple
 from PyQt5 import QtCore
-from Core.Handlers import motorDriver
+from Core.Handlers import MotorDriver
 
-_steps_from_zero = 0  # Number of steps from true south and home position
-num_of_stp_per_deg_ra = 2880  # Enter the number of steps per degree for the RA motor (43200 steps/h or 2880 steps/deg)
-num_of_stp_per_deg_dec = 10000  # Enter the number of steps per degree for the DEC motor (10000 steps/deg)
+STEPS_FROM_ZERO = 0  # Number of steps from true south and home position
+STEPS_PER_DEGREE_RA = 2880  # Enter the number of steps per degree for the RA motor (43200 steps/h or 2880 steps/deg)
+STEPS_PER_DEGREE_DEC = 10000  # Enter the number of steps per degree for the DEC motor (10000 steps/deg)
 
 
-class requestHandle(QtCore.QObject):
-    def __init__(self, cfg_data, server, client, posObj, servThread, clientThread, positionThread, parent=None):
-        super(requestHandle, self).__init__(parent)  # Get the parent of the class
+class RequestHandle(QtCore.QObject):
+    def __init__(self, cfg_data, server, client, pos_obj, server_thread, client_thread, position_thread, parent=None):
+        super(RequestHandle, self).__init__(parent)  # Get the parent of the class
         self.log_data = logging.getLogger(__name__)  # Get the logging object
         self.cfg_data = cfg_data
         self.server = server
         self.client = client
-        self.positionThread = positionThread
-        self.serverThread = servThread
-        self.clientThread = clientThread
-        self.posObj = posObj  # Dish position object
+        self.position_thread = position_thread
+        self.server_thread = server_thread
+        self.client_thread = client_thread
+        self.pos_obj = pos_obj  # Dish position object
 
         self.tracking_command = False  # Indicator if we need tracking or not
         self.sky_scanning_command = False  # Sky scanning indicator
@@ -33,82 +33,82 @@ class requestHandle(QtCore.QObject):
         self.trk_time = 0.0  # Total tracking time in minutes
 
         # Stores the scanning parameters in a named tuple
-        self.Scan_Parameters = namedtuple('Scan_Parameters', 'Point1 MotSpeeds IntTime')
+        self.scan_parameters = namedtuple('Scan_Parameters', 'Point1 MotSpeeds IntTime')
         self.scan_params = ()  # Save the scanning parameters in a tuple
         self.scanning_map = ()  # Tuple to save the map points
 
     def start(self):
-        self.serverThread.start()
-        self.clientThread.start()
+        self.server_thread.start()
+        self.client_thread.start()
         self.server.requestProcess.connect(self.process)
 
-        cur_stps = self.cfg_data.getSteps()  # Get the current steps from home to add them initially
+        cur_steps = self.cfg_data.get_steps()  # Get the current steps from home to add them initially
 
-        self.motor = motorDriver.MotorInit()
-        self.motorMove = motorDriver.Stepping(cur_stps[0], cur_stps[1])
-        self.motorMove.motStepSig.connect(self.posObj.dataSend)
-        self.motorMove.updtStepSig.connect(self.step_update)
-        self.motorMove.motHaltSig.connect(partial(self.server.sendDataClient.emit, "STOPPED_MOVING\n"))
-        self.motorMove.motHaltSig.connect(self.action_reseter)  # Reset the tracking and scanning indicators on halt
-        self.motorMove.motStopSig.connect(self.tracker)  # Send the tracking command if the user requested it
-        self.motorMove.motStopSig.connect(self.sky_scanner)  # Act appropriately when motors are stopped
-        self.motorMove.motStartSig.connect(partial(self.server.sendDataClient.emit, "STARTED_MOVING\n"))
-        self.motorMove.trackStatSig.connect(self.tracking_status)  # Send the appropriate message to client
+        self.motor = MotorDriver.MotorInit()
+        self.motor_move = MotorDriver.Stepping(cur_steps[0], cur_steps[1])
+        self.motor_move.motStepSig.connect(self.pos_obj.dataSend)
+        self.motor_move.updtStepSig.connect(self.step_update)
+        self.motor_move.motHaltSig.connect(partial(self.server.sendDataClient.emit, "STOPPED_MOVING\n"))
+        self.motor_move.motHaltSig.connect(self.action_reseter)  # Reset the tracking and scanning indicators on halt
+        self.motor_move.motStopSig.connect(self.tracker)  # Send the tracking command if the user requested it
+        self.motor_move.motStopSig.connect(self.sky_scanner)  # Act appropriately when motors are stopped
+        self.motor_move.motStartSig.connect(partial(self.server.sendDataClient.emit, "STARTED_MOVING\n"))
+        self.motor_move.trackStatSig.connect(self.tracking_status)  # Send the appropriate message to client
 
         self.server.clientDisconnected.connect(partial(self.motor.enabler, False))  # Disable motors
 
-        self.motor.GPIO_Init()  # Initialize the GPIO pins on the Raspberry
+        self.motor.gpio_init()  # Initialize the GPIO pins on the Raspberry
 
         # Initialize the motor threads
-        self.motorThread = QtCore.QThread()
-        self.motorMove.moveToThread(self.motorThread)
-        self.motorThread.start()
+        self.motor_thread = QtCore.QThread()
+        self.motor_move.moveToThread(self.motor_thread)
+        self.motor_thread.start()
 
-        self.positionThread.start()
+        self.position_thread.start()
 
     @QtCore.pyqtSlot(str, name='requestProcess')
     def process(self, request: str):
         self.log_data.debug("Process handler called, handle msg: %s" % request)  # Used for debugging purposes
         response = "Unrecognizable request\n"  # Variable to hold the response to be sent
-        splt_req = request.split("_")  # Split the received string using the specified delimiter
+        split_request = request.split("_")  # Split the received string using the specified delimiter
 
         if request == "CONNECT_CLIENT":
             self.client.reConnectSigC.emit()  # Attempt a client reconnection since the server should be running
             response = "Client notified to start\n"
 
         elif request == "START_SENDING_POS":
-            self.positionThread.start()  # Start the position report thread
+            self.position_thread.start()  # Start the position report thread
             response = "STARTED_SENDING_POS\n"
         elif request == "STOP_POS_SEND":
-            self.positionThread.quit()
+            self.position_thread.quit()
             response = "POSITION_REPORTING_HALTED\n"
         elif request == "SEND_POS_UPDATE":
-            cur_pos = self.posObj.getPosition()  # Send an update of the current position
+            cur_pos = self.pos_obj.getPosition()  # Send an update of the current position
             self.client.sendData.emit("POSUPDATE_RA_%.5f_DEC_%.5f\n" % (float(cur_pos[0]), float(cur_pos[1])))
             response = "POS_UPDT_SENT\n"
 
         elif request == "STOP":  # TODO implement the stop request in a better way
-            self.motor.clean_IO()  # Clean-up GPIO before exit
+            self.motor.clean_io()  # Clean-up GPIO before exit
             sys.exit()  # Exit from the application as per request
-        elif splt_req[0] == "MANCONT":  # TODO implement the manual control in a better way
-            if len(splt_req) == 5:
-                freq = splt_req[2]
-                step_ra = splt_req[3]
-                step_dec = splt_req[4]
-                if splt_req[1] == "MOVRA":
+        elif split_request[0] == "MANCONT":  # TODO implement the manual control in a better way
+            if len(split_request) == 5:
+                freq = split_request[2]
+                step_ra = split_request[3]
+                step_dec = split_request[4]
+                if split_request[1] == "MOVRA":
                     # TODO make the string more intuitive by including field names
-                    self.motorMove.moveMotSig.emit("%s_%s_%s_%d" % (freq, freq, step_ra, 0))
-                elif splt_req[1] == "MOVDEC":
-                    self.motorMove.moveMotSig.emit("%s_%s_%d_%s" % (freq, freq, 0, step_dec))
-                elif splt_req[1] == "MOVE":
-                    self.motorMove.moveMotSig.emit("%s_%s_%s_%s" % (freq, freq, step_ra, step_dec))
+                    self.motor_move.moveMotSig.emit("%s_%s_%s_%d" % (freq, freq, step_ra, 0))
+                elif split_request[1] == "MOVDEC":
+                    self.motor_move.moveMotSig.emit("%s_%s_%d_%s" % (freq, freq, 0, step_dec))
+                elif split_request[1] == "MOVE":
+                    self.motor_move.moveMotSig.emit("%s_%s_%s_%s" % (freq, freq, step_ra, step_dec))
 
                 if int(step_ra) > int(step_dec):
                     response = "MAX-STEPS-TO-DO_RA_%s" % step_ra
                 else:
                     response = "MAX-STEPS-TO-DO_DEC_%s" % step_dec
-            elif splt_req[1] == "STOP":
-                self.motorMove.moveMotSig.emit("-1_-1_0_0")  # Send a negative frequency to indicate stopping
+            elif split_request[1] == "STOP":
+                self.motor_move.moveMotSig.emit("-1_-1_0_0")  # Send a negative frequency to indicate stopping
 
         elif request == "Test":  # Respond to the connection testing command
             response = "OK\n"  # Just send a response to confirm communication
@@ -139,34 +139,34 @@ class requestHandle(QtCore.QObject):
             response = "NO\n"  # Value until full functionality is provided
         elif request == "SCALE":  # Send the number of steps per degree for each motor
             # TODO send the steps per degree for the motors, may be removed in later release
-            response = "SCALEVALS_RA_%d_DEC_%d\n" % (num_of_stp_per_deg_ra, num_of_stp_per_deg_dec)
+            response = "SCALEVALS_RA_%d_DEC_%d\n" % (STEPS_PER_DEGREE_RA, STEPS_PER_DEGREE_DEC)
         elif request == "SEND_HOME_STEPS":
-            home_stps = self.cfg_data.getSteps()  # Get the saved steps
-            response = "STEPS-FROM-HOME_%.0f_%.0f\n" % (home_stps[0], home_stps[1])  # Right ascension first value
+            home_steps = self.cfg_data.get_steps()  # Get the saved steps
+            response = "STEPS-FROM-HOME_%.0f_%.0f\n" % (home_steps[0], home_steps[1])  # Right ascension first value
         elif request == "RETURN_HOME":  # Return to home position
             freq = 200.0  # Set the maximum frequency
-            home_stps = self.cfg_data.getSteps()  # Get the saved steps
-            self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, -int(home_stps[0]), -int(home_stps[1])))
+            home_steps = self.cfg_data.get_steps()  # Get the saved steps
+            self.motor_move.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, -int(home_steps[0]), -int(home_steps[1])))
 
-        elif splt_req[0] == "TRNST":
+        elif split_request[0] == "TRNST":
             freq = 200.0  # Set the maximum frequency
-            cur_stps = self.cfg_data.getSteps()  # Read the current steps from home to compensate for it
-            ra_steps = float(splt_req[2]) * motorDriver.ra_steps_per_deg - float(cur_stps[0])
-            dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg - float(cur_stps[1])
-            self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
-        elif splt_req[0] == "TRK":
+            cur_steps = self.cfg_data.get_steps()  # Read the current steps from home to compensate for it
+            ra_steps = float(split_request[2]) * MotorDriver.RA_STEPS_PER_DEGREE - float(cur_steps[0])
+            dec_steps = float(split_request[4]) * MotorDriver.DEC_STEPS_PER_DEGREE - float(cur_steps[1])
+            self.motor_move.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
+        elif split_request[0] == "TRK":
             freq = 200.0  # Set the maximum frequency
 
-            cur_stps = self.cfg_data.getSteps()  # Read the current steps from home to compensate for it
-            ra_steps = float(splt_req[2]) * motorDriver.ra_steps_per_deg - float(cur_stps[0])
-            dec_steps = float(splt_req[4]) * motorDriver.dec_steps_per_deg - float(cur_stps[1])
+            cur_steps = self.cfg_data.get_steps()  # Read the current steps from home to compensate for it
+            ra_steps = float(split_request[2]) * MotorDriver.RA_STEPS_PER_DEGREE - float(cur_steps[0])
+            dec_steps = float(split_request[4]) * MotorDriver.DEC_STEPS_PER_DEGREE - float(cur_steps[1])
 
-            self.trk_speed_ra = float(splt_req[6])
-            self.trk_speed_dec = float(splt_req[8])
-            self.trk_time = float(splt_req[10])  # Get the total tracking time requested
-            self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
+            self.trk_speed_ra = float(split_request[6])
+            self.trk_speed_dec = float(split_request[8])
+            self.trk_time = float(split_request[10])  # Get the total tracking time requested
+            self.motor_move.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
             self.tracking_command = True  # Enable the tracking command, so on motor stop the tracking is triggered
-        elif splt_req[0] == "SKY-SCAN":
+        elif split_request[0] == "SKY-SCAN":
             # Store the scanning parameters in a named tuple. Format:
             '''
             Two dimensions:
@@ -181,20 +181,21 @@ class requestHandle(QtCore.QObject):
             a[5] = Direction_of_scanning
             a[7] = Integration_time
             '''
-            self.scan_params = self.Scan_Parameters((splt_req[2], splt_req[4]), (splt_req[6], splt_req[8]),
-                                                    splt_req[10], )
+            self.scan_params = self.scan_parameters((split_request[2], split_request[4]), (split_request[6],
+                                                                                           split_request[8]),
+                                                    split_request[10], )
 
             # Transit to position first, before sky scanning
             freq = 200.0  # Set the maximum frequency
-            cur_stps = self.cfg_data.getSteps()  # Read the current steps from home to compensate for it
-            ra_steps = float(self.scan_params.Point1[0]) * motorDriver.ra_steps_per_deg - float(cur_stps[0])
-            dec_steps = float(self.scan_params.Point1[1]) * motorDriver.dec_steps_per_deg - float(cur_stps[1])
+            cur_steps = self.cfg_data.get_steps()  # Read the current steps from home to compensate for it
+            ra_steps = float(self.scan_params.Point1[0]) * MotorDriver.RA_STEPS_PER_DEGREE - float(cur_steps[0])
+            dec_steps = float(self.scan_params.Point1[1]) * MotorDriver.DEC_STEPS_PER_DEGREE - float(cur_steps[1])
 
-            self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
+            self.motor_move.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq, freq, int(ra_steps), int(dec_steps)))
             self.sky_scanning_command = True  # Enable the sky scanning command
-        elif splt_req[0] == "SKY-SCAN-MAP":
-            for i in range(1, len(splt_req) - 1, 2):
-                self.scanning_map += ((splt_req[i], splt_req[i + 1]),)
+        elif split_request[0] == "SKY-SCAN-MAP":
+            for i in range(1, len(split_request) - 1, 2):
+                self.scanning_map += ((split_request[i], split_request[i + 1]),)
 
         self.server.sendDataClient.emit(response)  # Send the response to the client
 
@@ -208,14 +209,14 @@ class requestHandle(QtCore.QObject):
                 ra_steps = 345600  # Enough steps to track for 8 hours
                 dec_steps = 0  # Declination is not changing is stellar objects, so we do not move this motor
             else:
-                freq1 = 12 + self.trk_speed_ra * num_of_stp_per_deg_ra
-                freq2 = self.trk_speed_dec * num_of_stp_per_deg_dec
+                freq1 = 12 + self.trk_speed_ra * STEPS_PER_DEGREE_RA
+                freq2 = self.trk_speed_dec * STEPS_PER_DEGREE_DEC
 
                 ra_steps = track_time * freq1  # Calculate the necessary step number
                 dec_steps = track_time * freq2  # Calculate the necessary step number
 
             self.tracking_command = False  # Reset tracking command
-            self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq1, freq2, int(ra_steps), int(dec_steps)))
+            self.motor_move.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq1, freq2, int(ra_steps), int(dec_steps)))
 
     @QtCore.pyqtSlot(name='motionStopNotifierSignal')
     def sky_scanner(self):
@@ -233,15 +234,15 @@ class requestHandle(QtCore.QObject):
                     ra_steps = track_time * freq1
                     dec_steps = track_time * freq2
                 self.integrate = False  # Get out of integration next time
-                self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq1, freq2, int(ra_steps), int(dec_steps)))
+                self.motor_move.moveMotSig.emit("%.1f_%.1f_%d_%d" % (freq1, freq2, int(ra_steps), int(dec_steps)))
             else:
-                if not (self.point_count > len(self.scanning_map)):
-                    cur_stps = self.cfg_data.getSteps()  # Read the current steps from home to compensate for it
-                    ra_steps = float(self.scanning_map[self.point_count][0]) * motorDriver.ra_steps_per_deg - float(
-                        cur_stps[0])
-                    dec_steps = float(self.scanning_map[self.point_count][1]) * motorDriver.dec_steps_per_deg - float(
-                        cur_stps[1])
-                    self.motorMove.moveMotSig.emit("%.1f_%.1f_%d_%d" % (200.0, 200.0, int(ra_steps), int(dec_steps)))
+                if not self.point_count > len(self.scanning_map):
+                    current_steps = self.cfg_data.get_steps()  # Read the current steps from home to compensate for it
+                    ra_steps = float(self.scanning_map[self.point_count][0]) * MotorDriver.RA_STEPS_PER_DEGREE - float(
+                        current_steps[0])
+                    dec_steps = float(self.scanning_map[self.point_count][1]) * MotorDriver.DEC_STEPS_PER_DEGREE - float(
+                        current_steps[1])
+                    self.motor_move.moveMotSig.emit("%.1f_%.1f_%d_%d" % (200.0, 200.0, int(ra_steps), int(dec_steps)))
                     self.point_count += 1  # Increment the point count
 
                     if float(self.scan_params.IntTime) > 0:
@@ -260,7 +261,7 @@ class requestHandle(QtCore.QObject):
 
     @QtCore.pyqtSlot(list, name='updateSteps')
     def step_update(self, data: list):
-        self.cfg_data.setSteps(data)
+        self.cfg_data.set_steps(data)
 
     @QtCore.pyqtSlot(name='motionHaltNotifierSignal')
     def action_reseter(self):

@@ -2,7 +2,7 @@ import xml.etree.ElementTree as etree
 import logging
 
 
-class confDataPi(object):
+class ConfDataPi:
     """
     Handle the XML file, containing the required settings
     """
@@ -54,17 +54,20 @@ class confDataPi(object):
             self.tree = etree.parse(self.filename)
             self.root = self.tree.getroot()
         except Exception:
-            self.log_data.exception(
-                    "An exception occurred trying parse the XML settings file. See the traceback below.")
+            self.log_data.exception("An exception occurred trying parse the XML settings file. See the traceback "
+                                    "below.")
             exit(1)  # Exit the program since the settings file is important
 
-    def getConfig(self, child, subchild):
+    def get_config(self, child, subchild):
         """Get the desired configuration from the parsed XML file
 
         This method tries to find the provided configuration in the parsed XML file. A parsed XML file is assumed.
 
         Todo:
             Check whether an exception catch is required during the search process
+
+        Todo:
+            Check where this function is used and accommodate for the empty string return on error
 
         Args:
             child (str): Provide the child element to be found
@@ -77,10 +80,9 @@ class confDataPi(object):
         for item in children:
             if item.tag == subchild:
                 return item.text
-            else:
-                continue
+        return ""  # Empty string if o element found
 
-    def setConfig(self, element, child, value):
+    def set_config(self, element, child, value):
         """
 
         Args:
@@ -102,17 +104,17 @@ class confDataPi(object):
             else:
                 continue
 
-    def getSteps(self):
+    def get_steps(self):
         """
 
         Returns:
 
         """
         elm = self.root.find("Steps")
-        return [float(self.getConfig("Steps", "RA")), float(self.getConfig("Steps", "DEC")), elm.get("home_calib")]
+        return [float(self.get_config("Steps", "RA")), float(self.get_config("Steps", "DEC")), elm.get("home_calib")]
 
     # Make it as direct as possible to save time
-    def setSteps(self, m_steps, calib=""):
+    def set_steps(self, m_steps, calib=""):
         """
 
         Args:
@@ -137,15 +139,15 @@ class confDataPi(object):
         self.tree.write(self.filename)  # Write the data to the XML file
 
     # Server data
-    def getHost(self):
+    def get_host(self):
         """
 
         Returns:
 
         """
-        return self.getConfig("TCPServer", "host")
+        return self.get_config("TCPServer", "host")
 
-    def setHost(self, host):
+    def set_host(self, host):
         """
 
         Args:
@@ -154,17 +156,17 @@ class confDataPi(object):
         Returns:
 
         """
-        self.setConfig("TCPServer", "host", str(host))
+        self.set_config("TCPServer", "host", str(host))
 
-    def getPort(self):
+    def get_port(self):
         """
 
         Returns:
 
         """
-        return self.getConfig("TCPServer", "port")
+        return self.get_config("TCPServer", "port")
 
-    def setPort(self, port):
+    def set_port(self, port):
         """
 
         Args:
@@ -173,18 +175,18 @@ class confDataPi(object):
         Returns:
 
         """
-        self.setConfig("TCPServer", "port", str(port))
+        self.set_config("TCPServer", "port", str(port))
 
     # Client data
-    def getClientHost(self):
+    def get_client_host(self):
         """
 
         Returns:
 
         """
-        return self.getConfig("TCPClient", "host")
+        return self.get_config("TCPClient", "host")
 
-    def setClientHost(self, host):
+    def set_client_host(self, host):
         """
 
         Args:
@@ -193,17 +195,17 @@ class confDataPi(object):
         Returns:
 
         """
-        self.setConfig("TCPClient", "host", str(host))
+        self.set_config("TCPClient", "host", str(host))
 
-    def getClientPort(self):
+    def get_client_port(self):
         """
 
         Returns:
 
         """
-        return self.getConfig("TCPClient", "port")
+        return self.get_config("TCPClient", "port")
 
-    def setClientPort(self, port):
+    def set_client_port(self, port):
         """
 
         Args:
@@ -212,4 +214,4 @@ class confDataPi(object):
         Returns:
 
         """
-        self.setConfig("TCPClient", "port", str(port))
+        self.set_config("TCPClient", "port", str(port))

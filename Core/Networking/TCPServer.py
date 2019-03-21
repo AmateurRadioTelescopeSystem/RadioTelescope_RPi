@@ -10,8 +10,8 @@ class TCPServer(QtCore.QObject):
 
     def __init__(self, cfg, parent=None):
         super(TCPServer, self).__init__(parent)  # Get the parent of the class
-        self.host = cfg.getHost()  # Get the TCP connection host
-        self.port = cfg.getPort()  # Get the server port from the settings file
+        self.host = cfg.get_host()  # Get the TCP connection host
+        self.port = cfg.get_port()  # Get the server port from the settings file
         self.log_data = logging.getLogger(__name__)  # Create the necessary logger
 
     # This method is called in every thread start
@@ -21,9 +21,9 @@ class TCPServer(QtCore.QObject):
         :return: Nothing
         """
         self.socket = None  # Create the instance os the socket variable to use it later
-        self.connectServ()  # Start the server
+        self.connect_server()  # Start the server
 
-    def connectServ(self):
+    def connect_server(self):
         """
         Whenever we want a new TCP connection this function is called.
         :return: Nothing
@@ -31,18 +31,18 @@ class TCPServer(QtCore.QObject):
         if self.host == "localhost":
             self.host = QtNetwork.QHostAddress.LocalHost
         else:
-            for ipAddress in QtNetwork.QNetworkInterface.allAddresses():
-                if ipAddress != QtNetwork.QHostAddress.LocalHost and ipAddress.toIPv4Address() != 0:
+            for ip_address in QtNetwork.QNetworkInterface.allAddresses():
+                if ip_address != QtNetwork.QHostAddress.LocalHost and ip_address.toIPv4Address() != 0:
                     break
                 else:
-                    ipAddress = QtNetwork.QHostAddress.LocalHost
-            self.host = ipAddress  # Save the local IP address
+                    ip_address = QtNetwork.QHostAddress.LocalHost
+            self.host = ip_address  # Save the local IP address
 
-        self.tcpServer = QtNetwork.QTcpServer()  # Create a server object
-        self.tcpServer.newConnection.connect(self._new_connection)  # Handler for a new connection
+        self.tcp_server = QtNetwork.QTcpServer()  # Create a server object
+        self.tcp_server.newConnection.connect(self._new_connection)  # Handler for a new connection
         self.sendDataClient.connect(self.send)  # Connect the signal trigger for data sending
 
-        self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening for connections
+        self.tcp_server.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening for connections
 
     # Whenever there is new connection, we call this method
     def _new_connection(self):
@@ -50,22 +50,22 @@ class TCPServer(QtCore.QObject):
         Called whenever there is a new connection.
         :return: Nothing
         """
-        if self.tcpServer.hasPendingConnections():
-            self.socket = self.tcpServer.nextPendingConnection()  # Returns a new QTcpSocket
+        if self.tcp_server.hasPendingConnections():
+            self.socket = self.tcp_server.nextPendingConnection()  # Returns a new QTcpSocket
 
             if self.socket.state() == QtNetwork.QAbstractSocket.ConnectedState:
                 self.socket.readyRead.connect(self._receive)  # If there is pending data get it
                 self.socket.disconnected.connect(self._disconnected)  # Execute the appropriate code on state change
                 self.socket.error.connect(self._error)  # Log any error occurred
-                self.tcpServer.close()  # Stop listening for other connections
+                self.tcp_server.close()  # Stop listening for other connections
                 self.log_data.info("Someone connected on server")
 
     # Should we have data pending to be received, this method is called
     def _receive(self):
         try:
             while self.socket.bytesAvailable() > 0:  # Read all data in que
-                recData = self.socket.readLine().data().decode('utf-8').rstrip('\n')  # Get the data as a string
-                self.requestProcess.emit(recData)  # Send the received data to be processed
+                rec_data = self.socket.readLine().data().decode('utf-8').rstrip('\n')  # Get the data as a string
+                self.requestProcess.emit(rec_data)  # Send the received data to be processed
         except Exception:
             # If data is sent fast, then an exception will occur
             self.log_data.exception("A connected client abruptly disconnected. Returning to connection waiting")
@@ -75,7 +75,7 @@ class TCPServer(QtCore.QObject):
         # Do the following if the connection is lost
         self.socket.close()
         self.clientDisconnected.emit()
-        self.tcpServer.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening again
+        self.tcp_server.listen(QtNetwork.QHostAddress(self.host), int(self.port))  # Start listening again
 
     def _error(self):
         self.log_data.warning("Some error occurred in client: %s" % self.socket.errorString())
