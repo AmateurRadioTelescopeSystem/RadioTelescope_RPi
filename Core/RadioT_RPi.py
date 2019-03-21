@@ -2,7 +2,7 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath('.'))  # noqa
+sys.path.append(os.path.abspath('.'))  # noqa
 
 # Import the required libraries and classes
 from PyQt5 import QtCore
