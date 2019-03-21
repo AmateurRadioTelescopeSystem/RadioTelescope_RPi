@@ -1,4 +1,5 @@
 # image: balenalib/raspberrypi3-debian-python
+image: alpine:latest
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -15,20 +16,32 @@ cache:
 #  - python3 -V
 #  - python3 -m pip install --upgrade pip
 #  - python3 -m pip --version
-  
-    
+
+stages:
+  - build
+  - deploy
+
+before_script:
+  - apk update && apk add python3 python3-dev py3-qt5 build-base
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install -r requirements.txt
+  - python3 -m pip --version
+  - python3 -V
+
+# Code linting and stylizing
+pylint:
+  stage: build
+  script:
+    - python3 -m pip install pylint
+    - pylint --version
+  after_script:
+    - ci/pylint.sh
+
 # Deployment section
 pages:
   stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk update && apk add python3 python3-dev py3-qt5 build-base
-    - python3 -m pip install --upgrade pip
-    - python3 -m pip --version
-    - python3 -V
   script:
     - python3 -m pip install sphinx recommonmark sphinx-rtd-theme
-    - python3 -m pip install -r requirements.txt
   after_script:
     - sphinx-build --color -b html docs/source public
     - sphinx-build --color -b coverage docs/source coverage
