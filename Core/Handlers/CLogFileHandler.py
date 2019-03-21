@@ -30,11 +30,11 @@ class CustomLogHandler(logging.Handler):
         :param backup_count: Max number of old files to keep
         :param enc: Log file's encoding
         :param utc: UTC to be used as logging time
-        :type filename str
-        :type when str
-        :type backup_count int
-        :type enc str
-        :type utc bool
+        :type filename: str
+        :type when: str
+        :type backup_count: int
+        :type enc: str
+        :type utc: bool
         """
         logging.Handler.__init__(self)
 
@@ -55,7 +55,7 @@ class CustomLogHandler(logging.Handler):
         Set the formatter for the file handler
 
         :param fmt: Formatter string as passed from the configuration
-        :type fmt str
+        :type fmt: str
         :return: Nothing
         """
         self.fmt = fmt  # Save the format to use it for the handler later
@@ -94,7 +94,7 @@ class CustomLogHandler(logging.Handler):
         Send the log message to the logging queue, in order to be logged.
 
         :param s: Message object
-        :type s object
+        :type s: object
         :return: Nothing
         """
         self.queue.put_nowait(s)
@@ -129,8 +129,8 @@ class CustomLogHandler(logging.Handler):
 
         :param source: Source file name
         :param dest: Destination file name
-        :type source str
-        :type dest str
+        :type source: str
+        :type dest: str
         :return: Nothing
         """
         with open(source, "rb") as source_file:
@@ -145,7 +145,7 @@ class CustomLogHandler(logging.Handler):
         Append the appropriate suffix to the compressed file name
 
         :param name: File name to append suffix
-        :type name str
+        :type name: str
         :return: Nothing
         """
         return name + ".gz"
