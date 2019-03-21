@@ -90,7 +90,8 @@ class TCPServer(QtCore.QObject):
         except Exception:
             self.log_data.exception("Problem sending data. See traceback.")
 
-    ''''# This method is called whenever the thread exits
+    """
+    # This method is called whenever the thread exits
     def close(self):
         print("TCP server thread is closing")
         if self.socket is not None:
@@ -98,4 +99,5 @@ class TCPServer(QtCore.QObject):
             self.socket.disconnected.disconnect()  # Close the disconnect signal first to avoid firing
             self.socket.close()  # Close the underlying TCP socket
         self.tcpServer.close()  # Close the TCP server
-        self.sendDataClient.disconnect()  # Detach the signal to avoid any accidental firing (Reconnected at start)'''
+        self.sendDataClient.disconnect()  # Detach the signal to avoid any accidental firing (Reconnected at start)
+    """

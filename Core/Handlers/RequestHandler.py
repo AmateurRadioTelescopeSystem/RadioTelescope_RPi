@@ -240,8 +240,8 @@ class RequestHandle(QtCore.QObject):
                     current_steps = self.cfg_data.get_steps()  # Read the current steps from home to compensate for it
                     ra_steps = float(self.scanning_map[self.point_count][0]) * MotorDriver.RA_STEPS_PER_DEGREE - float(
                         current_steps[0])
-                    dec_steps = float(self.scanning_map[self.point_count][1]) * MotorDriver.DEC_STEPS_PER_DEGREE - float(
-                        current_steps[1])
+                    dec_steps = float(self.scanning_map[self.point_count][1]) * MotorDriver.\
+                        DEC_STEPS_PER_DEGREE - float(current_steps[1])
                     self.motor_move.moveMotSig.emit("%.1f_%.1f_%d_%d" % (200.0, 200.0, int(ra_steps), int(dec_steps)))
                     self.point_count += 1  # Increment the point count
 

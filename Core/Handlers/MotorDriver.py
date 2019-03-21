@@ -89,9 +89,9 @@ class Stepping(QtCore.QObject):
         self.tracking = False  # Tracking indicator
 
     @QtCore.pyqtSlot(str, name='moveMotorSignal')
-    def start(self, set: str):
+    def start(self, command: str):
         if self.motor.motor_status() is True:
-            string = set.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
+            string = command.split("_")  # String format: FRQRA_FRQDEC_STEPRA_STEPDEC
             frq_ra = round(1.0/float(string[0])*1000.0)  # Convert to period given the frequency
             frq_dec = round(1.0/float(string[1])*1000.0)
 
