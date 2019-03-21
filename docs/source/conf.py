@@ -12,9 +12,47 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+
+index_file = open("index.rst", "r")
+file_content = index_file.readlines()
+
+index_file.close()
+modules_index = 0
+modules_last_index = 0
+
+# Find the insertion location for th module location in the index.rst
+for index, line in enumerate(file_content):
+    if line.find(":caption: Contents:") is not -1:
+        modules_index = index + 2  # Do not touch the newline between the data and comment
+    elif line.find(".. PYTHON_MODULES_LIST_END") is not -1:
+        modules_last_index = index - 1
+
+# Add all the necessary python file containing folder to search path
+sys.path.insert(0, os.path.abspath('../../'))
+sys.path.append(os.path.abspath('../../Core/'))
+for directory in os.listdir(os.path.abspath('../../Core/')):
+    if directory.find("__") is -1 and directory.find(".py") is -1:
+        sys.path.append(os.path.abspath("../../Core/" + directory))
+
+        # Generate RST files for each python file containing folder
+        if not os.path.exists("rst/" + directory):
+            os.makedirs("rst/" + directory)
+        if not os.listdir("rst/" + directory):
+            os.system("sphinx-apidoc -o rst/" + directory + " ../../Core/" + directory)
+
+        # Add the rst file locations in the index.rst
+        if ("   " + file_content[modules_index].split("/")[0]) != ("   " + directory):
+            if modules_index <= modules_last_index:
+                file_content.pop(modules_index)
+            file_content.insert(modules_index, "   rst/" + directory + "/modules\n")
+            modules_index += 1  # Go to the next line
+
+# Write the modules in the index.rst file
+index_file = open("index.rst", "w")
+index_file.writelines(file_content)
+index_file.close()
 
 
 # -- Project information -----------------------------------------------------
