@@ -1,9 +1,9 @@
-from PyQt5 import QtCore
+import sys
+import logging
 from functools import partial
 from collections import namedtuple
+from PyQt5 import QtCore
 from Core.Handlers import motorDriver
-import logging
-import sys
 
 _steps_from_zero = 0  # Number of steps from true south and home position
 num_of_stp_per_deg_ra = 2880  # Enter the number of steps per degree for the RA motor (43200 steps/h or 2880 steps/deg)

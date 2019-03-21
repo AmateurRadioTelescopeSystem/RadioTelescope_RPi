@@ -289,5 +289,7 @@ fabric.properties
 dummyServer.py
 settings_pi.xml
 log_config.ini
+docs/source/rst/
+modules.rst
 
 # End of https://www.gitignore.io/api/c,c++,linux,python,windows

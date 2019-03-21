@@ -83,6 +83,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
+    'sphinxcontrib.napoleon',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -111,7 +112,10 @@ exclude_patterns = []
 autodoc_mock_imports = ['RPi.GPIO']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = None
+pygments_style = 'native'
+
+# Enable constructor documentation
+autoclass_content = 'both'
 
 
 # -- Options for HTML output -------------------------------------------------

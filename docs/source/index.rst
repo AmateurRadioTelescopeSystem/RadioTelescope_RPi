@@ -10,8 +10,10 @@ Welcome to Radio Telescope Antenna Controller's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
-.. PYTHON_MODULS_LIST_END
+   rst/Configuration/modules
+   rst/Networking/modules
+   rst/Handlers/modules
+.. PYTHON_MODULES_LIST_END
 
 
 Indices and tables

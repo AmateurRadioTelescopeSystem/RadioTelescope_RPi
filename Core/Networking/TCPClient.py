@@ -1,5 +1,5 @@
-from PyQt5 import QtCore, QtNetwork
 import logging
+from PyQt5 import QtCore, QtNetwork
 
 
 class TCPClient(QtCore.QObject):
@@ -9,6 +9,13 @@ class TCPClient(QtCore.QObject):
     reConnectSigC = QtCore.pyqtSignal(name='reConnectClient')  # A reconnection signal originating from a button press
 
     def __init__(self, cfgData, parent=None):
+        """Initialize the class by providing the configuration data object as returned by the
+        :meth:`configData_Pi.confDataPi.parse`.
+
+        Args:
+            cfgData: Configuration data object
+            parent: Parent class to inherit from, if any
+        """
         super(TCPClient, self).__init__(parent)  # Get the parent of the class
         self.cfgData = cfgData  # Create a variable for the cfg file
 

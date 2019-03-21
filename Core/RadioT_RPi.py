@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
-import sys
 import os
+import sys
+import logging.config
 sys.path.append(os.path.abspath('.'))  # noqa
+
+# pylint: disable=wrong-import-position
 
 # Import the required libraries and classes
 from PyQt5 import QtCore
@@ -10,7 +13,8 @@ from Position import DishPosition
 from Core.Handlers import requestHandler
 from Core.Networking import TCPServer, TCPClient
 from Core.Configuration import configData_Pi, defaultData
-import logging.config
+
+# pylint: disable=wrong-import-position
 
 # TODO Test the functionality of the server and client
 # TODO make the app "exitable" so killing is not required for termination
