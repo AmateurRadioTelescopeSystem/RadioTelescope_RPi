@@ -22,7 +22,7 @@ pages:
   stage: deploy
   image: alpine:latest
   before_script:
-    - apk update && apk add python3 python3-dev py3-qt5 base-build
+    - apk update && apk add python3 python3-dev py3-qt5 build-base
     - python3 -m pip install --upgrade pip
   script:
     - python3 -m pip install sphinx recommonmark sphinx-rtd-theme
