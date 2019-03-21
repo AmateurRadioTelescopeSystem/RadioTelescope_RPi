@@ -1,5 +1,5 @@
 from PyQt5 import QtCore
-import mpu9250
+# import mpu9250
 import logging
 import math
 
