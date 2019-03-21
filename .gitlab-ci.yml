@@ -32,7 +32,7 @@ before_script:
 pylava:
   stage: build
   tags:
-    - trdRPiShell
+    - trdRadioRPi
   before_script:
     - apk update && apk add python3
     - python3 -m pip install --upgrade pip && python3 -m pip install pylava
@@ -43,7 +43,7 @@ pylava:
 pylint:
   stage: build
   tags:
-    - trdRPiShell
+    - trdRadioRPi
   script:
     - python3 -m pip install pylint
     - pylint --version
