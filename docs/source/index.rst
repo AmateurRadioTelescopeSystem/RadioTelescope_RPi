@@ -11,6 +11,8 @@ Welcome to Radio Telescope Antenna Controller's documentation!
    :caption: Contents:
 
 
+.. PYTHON_MODULS_LIST_END
+
 
 Indices and tables
 ==================
